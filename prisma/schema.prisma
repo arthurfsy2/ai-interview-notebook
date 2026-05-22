@@ -1,0 +1,78 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Interview {
+  id              String   @id @default(cuid())
+  userId          String   @default("local")
+  companyName     String
+  position        String
+  interviewDate   DateTime
+  interviewMode   String   @default("线下") // '线上' | '线下' | '混合'
+  result          String   @default("待定") // '通过' | '被拒' | '主动放弃' | '无消息' | '待定'
+  experienceRating Int     @default(3)      // 1-5
+  rounds          Int      @default(1)
+  salaryRange     String?
+  commuteTime     String?
+  notes           String   @default("")     // Markdown notes
+  aiTags          String?                   // JSON: AITags
+  aiInsights      String?                   // JSON: AIInsights
+  questions       String?                   // JSON: string[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  preInterviewAnalysis PreInterviewAnalysis?
+
+  @@index([userId])
+  @@index([companyName])
+  @@index([result])
+  @@map("interviews")
+}
+
+model PreInterviewAnalysis {
+  id                String   @id @default(cuid())
+  userId            String   @default("local")
+  companyName       String
+  position          String
+  jdRawText         String
+  analysisResult    String?  // JSON: full analysis result
+  verdict           String?  // '建议去' | '可考虑' | '谨慎' | '不建议'
+  score             Int?
+  vetoReason        String?
+  linkedInterviewId String?  @unique
+  interview         Interview? @relation(fields: [linkedInterviewId], references: [id], onDelete: SetNull)
+  createdAt         DateTime @default(now())
+
+  @@index([userId])
+  @@map("pre_interview_analyses")
+}
+
+model UserProfile {
+  id                String   @id @default(cuid())
+  userId            String   @unique @default("local")
+  resumeText        String   @default("")
+  currentTitle      String   @default("")
+  yearsOfExperience Int      @default(0)
+  targetTitle       String   @default("")
+  targetIndustry    String   @default("[]")
+  currentSalary     String   @default("{}")
+  location          String   @default("")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@map("user_profiles")
+}
+
+model Settings {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
