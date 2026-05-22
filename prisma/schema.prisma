@@ -19,6 +19,7 @@ model Interview {
   rounds          Int      @default(1)
   salaryRange     String?
   commuteTime     String?
+  workSchedule    String?                   // '双休' | '大小周' | '单休' | '996'
   notes           String   @default("")     // Markdown notes
   aiTags          String?                   // JSON: AITags
   aiInsights      String?                   // JSON: AIInsights

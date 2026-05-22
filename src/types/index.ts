@@ -32,6 +32,7 @@ export interface Interview {
   rounds: number;
   salaryRange?: string;
   commuteTime?: string;
+  workSchedule?: string;
   notes: string;
   aiTags?: AITags;
   aiInsights?: AIInsights;

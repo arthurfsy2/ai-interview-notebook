@@ -39,7 +39,7 @@ export default function HomePage() {
 
   const features = [
     {
-      title: "面试前分析",
+      title: t("preInterview"),
       description: "粘贴 JD → AI 分析公司背景、薪资换算、简历匹配 → 决策报告",
       icon: FileSearch,
       color: "text-blue-600",

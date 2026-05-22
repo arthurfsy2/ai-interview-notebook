@@ -1,10 +1,15 @@
 {
+  "Common": {
+    "errorOccurred": "Error occurred: {message}",
+    "retry": "Retry"
+  },
   "Index": {
     "title": "AI Interview Assistant",
     "subTitle1": "Pre-Interview Research · Post-Interview Review",
     "subTitle2": "Make every interview a step forward",
+    "preInterview": "Pre-Apply",
     "heroDesc": "Paste JD for one-click company analysis, salary conversion, and resume matching. AI extracts insights from your notes afterward.",
-    "startAnalysis": "📋 Pre-Interview Analysis",
+    "startAnalysis": "📋 Pre-Apply Assessment",
     "newRecord": "📝 New Interview",
     "quickNote": "⚡ Quick Note",
     "recentRecords": "Recent Interviews",
@@ -19,7 +24,7 @@
   "Navigation": {
     "home": "Home",
     "interviews": "Interviews",
-    "preInterview": "Pre-Interview",
+    "preInterview": "Pre-Apply",
     "companies": "Companies",
     "analytics": "Analytics",
     "profile": "Profile",
@@ -69,8 +74,8 @@
     "saved": "Saved."
   },
   "PreInterview": {
-    "title": "Pre-Interview Analysis",
-    "newAnalysis": "New Analysis",
+    "title": "Pre-Apply Assessment",
+    "newAnalysis": "New Assessment",
     "pasteJD": "Paste JD",
     "jdPlaceholder": "Paste the full JD text here...",
     "companyName": "Company",

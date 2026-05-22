@@ -57,6 +57,7 @@ export async function POST(req: NextRequest) {
         rounds: body.rounds || 1,
         salaryRange: body.salaryRange || null,
         commuteTime: body.commuteTime || null,
+        workSchedule: body.workSchedule || null,
         notes: body.notes || "",
       },
     });

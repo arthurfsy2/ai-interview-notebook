@@ -1,11 +1,15 @@
 {
+  "Common": {
+    "errorOccurred": "出错了：{message}",
+    "retry": "重试"
+  },
   "Index": {
     "title": "AI 面试全流程助手",
     "subTitle1": "面试前背调 · 面试后复盘",
     "subTitle2": "让每次面试都成为进步的阶梯",
     "heroDesc": "粘贴 JD 一键分析公司背景、薪资换算、简历匹配度 —— 面试前就知道值不值得去。面试后 AI 自动提取标签、发现模式、给出改进建议。",
-    "startAnalysis": "📋 面试前分析",
-    "newRecord": "📝 新增面试记录",
+    "startAnalysis": "📋 投前评估",
+    "preInterview": "投前评估",
     "quickNote": "⚡ 快速记录",
     "recentRecords": "最近面试记录",
     "viewAll": "查看全部",
@@ -19,7 +23,7 @@
   "Navigation": {
     "home": "首页",
     "interviews": "面试记录",
-    "preInterview": "面试前分析",
+    "preInterview": "投前评估",
     "companies": "公司画像",
     "analytics": "分析面板",
     "profile": "个人档案",
@@ -69,8 +73,8 @@
     "saved": "已保存，可在面试记录中补充细节"
   },
   "PreInterview": {
-    "title": "面试前分析",
-    "newAnalysis": "新建分析",
+    "title": "投前评估",
+    "newAnalysis": "新建评估",
     "pasteJD": "粘贴 JD 文本",
     "jdPlaceholder": "将招聘 JD 原文粘贴到此处...",
     "companyName": "公司名称",
@@ -80,7 +84,7 @@
     "webSearching": "正在搜索公司信息...",
     "matching": "正在匹配简历...",
     "calculating": "正在换算薪资...",
-    "report": "分析报告",
+    "report": "评估报告",
     "companyAnalysis": "公司背景",
     "jdAnalysis": "JD 分析",
     "salaryConversion": "薪资换算",
@@ -93,7 +97,7 @@
       "notRecommend": "❌ 不建议"
     },
     "linkToInterview": "关联面试记录",
-    "noAnalyses": "暂无面试前分析记录"
+    "noAnalyses": "暂无投前评估记录"
   },
   "Profile": {
     "title": "个人档案",

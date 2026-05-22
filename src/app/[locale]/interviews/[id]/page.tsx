@@ -12,8 +12,10 @@ import {
   Trash2,
   Sparkles,
   Loader2,
+  FileSearch,
   Tag as TagIcon,
 } from "lucide-react";
+import Link from "next/link";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -168,6 +170,7 @@ export default function InterviewDetailPage() {
               </span>
               {interview.salaryRange && <span>💰 {interview.salaryRange}</span>}
               {interview.commuteTime && <span>🚗 {interview.commuteTime}</span>}
+              {interview.workSchedule && <span>📅 {interview.workSchedule}</span>}
             </div>
 
             <div className="mt-3 text-sm">
@@ -189,6 +192,44 @@ export default function InterviewDetailPage() {
             </CardContent>
           </Card>
         )}
+
+        {/* Linked Pre-Interview Analysis */}
+        {interview.preInterviewAnalysis && (() => {
+          const pa = interview.preInterviewAnalysis;
+          let paReport: any = null;
+          try { paReport = pa.analysisResult ? JSON.parse(pa.analysisResult) : null; } catch {}
+          return (
+            <Card className="mb-6 border-blue-200 bg-blue-50/30">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <FileSearch className="h-4 w-4 text-blue-500" />
+                  面试前分析
+                  {pa.verdict && (
+                    <Badge className={`text-xs ${pa.verdict === "建议去" ? "bg-emerald-100 text-emerald-700" : pa.verdict === "可考虑" ? "bg-blue-100 text-blue-700" : pa.verdict === "谨慎" ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>
+                      {pa.verdict}
+                    </Badge>
+                  )}
+                  {pa.score != null && <span className="text-xs text-slate-400 ml-1">{pa.score}/100</span>}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm space-y-1">
+                {paReport?.decision?.summary && (
+                  <p className="text-slate-700">{paReport.decision.summary}</p>
+                )}
+                {paReport?.jdAnalysis?.coreRequirements && (
+                  <div className="flex gap-1 flex-wrap">
+                    {paReport.jdAnalysis.coreRequirements.slice(0, 4).map((r: string) => (
+                      <span key={r} className="text-xs px-2 py-0.5 rounded-full bg-white border border-blue-100 text-blue-700">{r}</span>
+                    ))}
+                  </div>
+                )}
+                <Link href={`/pre-interview/${pa.id}`} className="text-xs text-blue-600 hover:underline inline-block mt-1">
+                  查看完整分析报告 →
+                </Link>
+              </CardContent>
+            </Card>
+          );
+        })()}
 
         {/* AI Analyze Button — always visible for re-analysis */}
         {interview.notes && interview.notes.trim().length >= 5 && (

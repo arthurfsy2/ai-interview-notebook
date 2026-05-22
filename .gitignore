@@ -91,3 +91,6 @@ data/wordcloud-dictionary.json
 
 # analysis scripts output (contains personal postcard data)
 scripts/*_coding_results.json
+
+resume/*
+!resume/.gitkeep

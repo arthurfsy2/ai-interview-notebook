@@ -154,6 +154,10 @@ export default function SettingsPage() {
   // 保存（新建 or 更新）
   const handleSave = async () => {
     if (!form.name.trim()) return;
+    if (!form.baseUrl.trim()) {
+      alert("API 地址不能为空");
+      return;
+    }
     setSaving(true);
     try {
       const res = await fetch("/api/settings/ai", {

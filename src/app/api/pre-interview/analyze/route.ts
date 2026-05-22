@@ -6,7 +6,7 @@ import { decryptSafe } from "@/lib/crypto";
 
 export const maxDuration = 120;
 
-async function searchCompanyBackground(companyName: string): Promise<string> {
+async function searchCompanyBackground(companyName: string, altName?: string): Promise<string> {
   try {
     const configsSetting = await prisma.settings.findUnique({ where: { key: "ai_configs" } });
     if (!configsSetting?.value) return "";
@@ -31,24 +31,34 @@ async function searchCompanyBackground(companyName: string): Promise<string> {
       headers["x-api-key"] = apiKey;
     }
 
-    const body = isTavily
-      ? JSON.stringify({ query: `${companyName} 公司 融资 规模 评价`, max_results: 3 })
-      : JSON.stringify({ query: `${companyName} company funding scale reviews`, num_results: 3 });
+    const doSearch = async (query: string) => {
+      const body = isTavily
+        ? JSON.stringify({ query, max_results: 3 })
+        : JSON.stringify({ query, num_results: 3 });
+      const res = await fetch(fetchUrl, { method: "POST", headers, body });
+      if (!res.ok) return "";
+      const data = await res.json();
+      const results = isTavily ? data.results : data.results;
+      if (!results?.length) return "";
+      return results
+        .map((r: any) => `- ${r.title || ""}: ${r.content || r.snippet || ""}`)
+        .join("\n");
+    };
 
-    console.log("[pre-interview] WebSearch:", fetchUrl);
-    const res = await fetch(fetchUrl, { method: "POST", headers, body });
-    if (!res.ok) {
-      console.warn("[pre-interview] WebSearch failed:", res.status);
-      return "";
+    // Primary search: full company name
+    console.log("[pre-interview] WebSearch primary:", companyName);
+    const primary = await doSearch(`${companyName} 公司 融资 规模 评价`);
+
+    // Secondary search: BOSS display name (if different and primary looks wrong)
+    let secondary = "";
+    if (altName && altName !== companyName) {
+      console.log("[pre-interview] WebSearch secondary:", altName);
+      secondary = await doSearch(`${altName} 公司 招聘`);
     }
 
-    const data = await res.json();
-    const results = isTavily ? data.results : data.results;
-    if (!results?.length) return "";
-
-    return results
-      .map((r: any) => `- ${r.title || ""}: ${r.content || r.snippet || ""}`)
-      .join("\n");
+    // Merge: primary first, then secondary
+    const merged = [primary, secondary].filter(Boolean).join("\n");
+    return merged;
   } catch (e: any) {
     console.warn("[pre-interview] WebSearch error:", e.message);
     return "";
@@ -58,7 +68,7 @@ async function searchCompanyBackground(companyName: string): Promise<string> {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { companyName, position, jdRawText, analysisId } = body;
+    const { companyName, position, jdRawText, analysisId, searchAltName, workSchedule: userWorkSchedule } = body;
 
     if (!companyName || !jdRawText) {
       return NextResponse.json({ error: "公司名称和JD不能为空" }, { status: 400 });
@@ -93,16 +103,31 @@ export async function POST(req: NextRequest) {
         throw new Error(analysisError);
       }
 
+      const normalizedUrl = normalizeAIUrl(aiConfig.baseUrl, aiConfig.provider);
+      console.log("[pre-interview] Using AI:", {
+        provider: aiConfig.provider,
+        rawUrl: aiConfig.baseUrl,
+        normalizedUrl,
+        fullEndpoint: `${normalizedUrl}/chat/completions`,
+        model: aiConfig.model,
+        hasKey: !!aiConfig.apiKey,
+      });
+
+      if (!normalizedUrl || !normalizedUrl.startsWith("http")) {
+        analysisError = `AI API 地址无效：${normalizedUrl || "(空)"}`;
+        throw new Error(analysisError);
+      }
+
       const openai = new OpenAI({
         apiKey: aiConfig.apiKey,
-        baseURL: normalizeAIUrl(aiConfig.baseUrl, aiConfig.provider),
+        baseURL: normalizedUrl,
         timeout: 120000,
       });
 
       // Search company background if WebSearch key is configured
       let companyBackground = "";
       try {
-        companyBackground = await searchCompanyBackground(companyName);
+        companyBackground = await searchCompanyBackground(companyName, searchAltName);
         if (companyBackground) {
           console.log("[pre-interview] Got company background, length:", companyBackground.length);
         }
@@ -120,13 +145,17 @@ export async function POST(req: NextRequest) {
         } catch {}
       }
 
+      const userSchedule = userWorkSchedule && userWorkSchedule !== "未提及"
+        ? `\n目标工作制度（用户提供）：${userWorkSchedule}`
+        : "";
+
       const prompt = `请分析以下招聘信息，给出结构化评估。
 
 公司名称：${companyName}
 岗位：${position}
 JD内容：
 ${jdRawText}
-${salaryInfo}
+${salaryInfo}${userSchedule}
 ${companyBackground ? `\n公司背景信息（来自搜索引擎）：\n${companyBackground}` : ""}
 
 请从以下维度分析（返回JSON，只返回JSON不要其他内容）：
@@ -177,10 +206,20 @@ ${companyBackground ? `\n公司背景信息（来自搜索引擎）：\n${compan
         const hasSevere = redFlags.some((f: string) => severeKeywords.some((k) => f.includes(k)));
         const vetoReason = hasSevere ? `严重风险信号：${redFlags.filter((f: string) => severeKeywords.some((k) => f.includes(k))).join("、")}` : undefined;
 
+        // 标注数据来源
+        const enriched = {
+          ...parsed,
+          _source: {
+            hasWebSearch: !!companyBackground,
+            searchedAt: companyBackground ? new Date().toISOString() : null,
+            webSearchSnippet: companyBackground ? companyBackground.substring(0, 500) : null,
+          },
+        };
+
         await prisma.preInterviewAnalysis.update({
           where: { id: analysis.id },
           data: {
-            analysisResult: JSON.stringify(parsed),
+            analysisResult: JSON.stringify(enriched),
             verdict: hasSevere ? "不建议" : verdict,
             score: hasSevere ? Math.min(score, 39) : score,
             vetoReason: vetoReason || null,

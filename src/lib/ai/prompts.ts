@@ -35,9 +35,17 @@ export async function analyzeNotes(notes: string, position?: string) {
     };
   }
 
+  const normalizedUrl = normalizeAIUrl(aiConfig.baseUrl, aiConfig.provider);
+  if (!normalizedUrl || !normalizedUrl.startsWith("http")) {
+    return {
+      ...getDefaultResult(),
+      _error: `AI API 地址无效：${normalizedUrl || "(空)"}。请在设置中检查 API 地址配置。`,
+    };
+  }
+
   const openai = new OpenAI({
     apiKey: aiConfig.apiKey,
-    baseURL: normalizeAIUrl(aiConfig.baseUrl, aiConfig.provider),
+    baseURL: normalizedUrl,
     timeout: 120000,
   });
 

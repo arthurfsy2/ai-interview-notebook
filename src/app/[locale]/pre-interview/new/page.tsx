@@ -3,14 +3,23 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { ArrowLeft, FileSearch, Loader2, Sparkles } from "lucide-react";
+import { ArrowLeft, FileSearch, Loader2, Sparkles, CheckCircle2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { parseBossJD } from "@/lib/parsers/boss";
 
 export default function NewPreInterviewPage() {
   const t = useTranslations("PreInterview");
@@ -18,11 +27,28 @@ export default function NewPreInterviewPage() {
   const [form, setForm] = useState({
     companyName: "",
     position: "",
+    workSchedule: "未提及",
     jdRawText: "",
   });
   const [analyzing, setAnalyzing] = useState(false);
   const [step, setStep] = useState<"input" | "searching" | "analyzing" | "done">("input");
   const [result, setResult] = useState<any>(null);
+  const [parsed, setParsed] = useState<any>(null);
+
+  const handleJdChange = (text: string) => {
+    setForm({ ...form, jdRawText: text });
+    // Auto-detect BOSS format
+    const parsed_ = parseBossJD(text);
+    if (parsed_.detected) {
+      setParsed(parsed_);
+      setForm({
+        ...form,
+        companyName: parsed_.companyName || form.companyName,
+        position: parsed_.position || form.position,
+        jdRawText: text,
+      });
+    }
+  };
 
   // Pre-fill profile if available
   useEffect(() => {
@@ -42,10 +68,24 @@ export default function NewPreInterviewPage() {
     setStep("searching");
 
     try {
+      // Use cleaned JD text if BOSS format detected
+      const jdToAnalyze = parsed?.detected && parsed?.jdText
+        ? `岗位：${form.position}\n公司：${form.companyName}\n薪资：${parsed.salary}\n城市：${parsed.location}\n经验：${parsed.experience}\n学历：${parsed.education}\n状态：${parsed.listingStatus} ${parsed.companySize} ${parsed.industry}\n福利：${parsed.benefits.join("、")}\n\n职位描述：\n${parsed.jdText}\n\n公司介绍：\n${parsed.companyIntro}`
+        : form.jdRawText;
+
       const res = await fetch("/api/pre-interview/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          companyName: form.companyName,
+          position: form.position,
+          jdRawText: jdToAnalyze,
+          workSchedule: form.workSchedule !== "未提及" ? form.workSchedule : null,
+          // 传递 BOSS 显示名用于二次搜索
+          ...(parsed?.companyDisplayName && parsed.companyDisplayName !== form.companyName
+            ? { searchAltName: parsed.companyDisplayName }
+            : {}),
+        }),
       });
       const data = await res.json();
       if (data.success) {
@@ -103,16 +143,53 @@ export default function NewPreInterviewPage() {
               </div>
             </div>
 
+            {/* Work Schedule */}
+            <div>
+              <Label className="flex items-center gap-2">
+                工作制度
+                <span className="text-xs text-slate-400 font-normal">（约面时确认，未提及则留空）</span>
+              </Label>
+              <Select value={form.workSchedule} onValueChange={(v) => setForm({ ...form, workSchedule: v })}>
+                <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="未提及">未提及</SelectItem>
+                  <SelectItem value="双休">双休</SelectItem>
+                  <SelectItem value="大小周">大小周</SelectItem>
+                  <SelectItem value="单休">单休</SelectItem>
+                  <SelectItem value="996">996</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
             {/* JD Paste */}
             <div>
-              <Label>{t("pasteJD")} *</Label>
+              <Label className="flex items-center justify-between">
+                <span>{t("pasteJD")} *</span>
+                {parsed?.detected && (
+                  <Badge className="bg-emerald-100 text-emerald-700 text-xs">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />BOSS直聘 已识别
+                  </Badge>
+                )}
+              </Label>
               <Textarea
-                className="min-h-[200px] text-sm"
+                className="min-h-[200px] max-h-[400px] text-sm"
                 placeholder={t("jdPlaceholder")}
                 value={form.jdRawText}
-                onChange={(e) => setForm({ ...form, jdRawText: e.target.value })}
+                onChange={(e) => handleJdChange(e.target.value)}
                 disabled={analyzing}
               />
+              {parsed?.detected && (
+                <div className="mt-2 text-xs text-slate-500 bg-emerald-50 border border-emerald-100 rounded-lg p-3 space-y-1">
+                  <p className="font-medium text-emerald-700 mb-1">自动提取信息：</p>
+                  {parsed.companyName && <p>🏢 公司：{parsed.companyName}</p>}
+                  {parsed.position && <p>💼 岗位：{parsed.position}</p>}
+                  {parsed.salary && <p>💰 薪资：{parsed.salary}</p>}
+                  {parsed.location && <p>📍 城市：{parsed.location} {parsed.experience && `· ${parsed.experience}`} {parsed.education && `· ${parsed.education}`}</p>}
+                  {parsed.listingStatus && <p>📊 状态：{parsed.listingStatus} {parsed.companySize && `· ${parsed.companySize}`} {parsed.industry && `· ${parsed.industry}`}</p>}
+                  {parsed.benefits.length > 0 && <p>🎁 福利：{parsed.benefits.join("、")}</p>}
+                  {parsed.jdText && <p className="text-slate-400">📝 JD正文已提取（{parsed.jdText.length}字）</p>}
+                </div>
+              )}
             </div>
 
             {/* Analyze Button */}

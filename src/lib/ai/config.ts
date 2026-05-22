@@ -124,8 +124,11 @@ export async function getConfigForPurpose(purpose: 'ocr' | 'text'): Promise<AICo
 
     const configs: AIConfigWithMeta[] = JSON.parse(configsSetting.value);
 
+    // 过滤掉 websearch 配置（它只用于搜索，不是 AI 模型配置）
+    const aiOnly = (c: AIConfigWithMeta) => c.provider !== 'websearch';
+
     // 1. 找启用的专用配置（useFor === purpose）
-    const dedicated = configs.find(c => c.useFor === purpose && c.apiKey && c.enabled !== false);
+    const dedicated = configs.find(c => aiOnly(c) && c.useFor === purpose && c.apiKey && c.enabled !== false);
     if (dedicated) {
       return {
         apiKey: decryptSafe(dedicated.apiKey),
@@ -137,7 +140,7 @@ export async function getConfigForPurpose(purpose: 'ocr' | 'text'): Promise<AICo
     }
 
     // 2. 找启用的通用配置（useFor === 'all' 或未设置）
-    const general = configs.find(c => (c.useFor === 'all' || !c.useFor) && c.apiKey && c.enabled !== false);
+    const general = configs.find(c => aiOnly(c) && (c.useFor === 'all' || !c.useFor) && c.apiKey && c.enabled !== false);
     if (general) {
       return {
         apiKey: decryptSafe(general.apiKey),
@@ -166,12 +169,14 @@ export async function isFreeTier(purpose: 'ocr' | 'text'): Promise<boolean> {
 
     const configs: AIConfigWithMeta[] = JSON.parse(configsSetting.value);
 
+    const aiOnly = (c: AIConfigWithMeta) => c.provider !== 'websearch';
+
     // 找启用的专用配置
-    const dedicated = configs.find(c => c.useFor === purpose && c.apiKey && c.enabled !== false);
+    const dedicated = configs.find(c => aiOnly(c) && c.useFor === purpose && c.apiKey && c.enabled !== false);
     if (dedicated) return dedicated.tier !== 'paid';
 
     // 找启用的通用配置
-    const general = configs.find(c => (c.useFor === 'all' || !c.useFor) && c.apiKey && c.enabled !== false);
+    const general = configs.find(c => aiOnly(c) && (c.useFor === 'all' || !c.useFor) && c.apiKey && c.enabled !== false);
     if (general) return general.tier !== 'paid';
 
     return true;

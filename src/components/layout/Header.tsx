@@ -8,7 +8,6 @@ import {
   BarChart3,
   Building2,
   Settings,
-  Mic,
   Languages,
   Menu,
   X,
@@ -24,9 +23,8 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
-    { name: t("interviews"), href: "/interviews", icon: FileText },
     { name: t("preInterview"), href: "/pre-interview", icon: FileSearch },
-    { name: t("quickNote"), href: "/interviews/new?quick=1", icon: Mic },
+    { name: t("interviews"), href: "/interviews", icon: FileText },
     { name: t("companies"), href: "/companies", icon: Building2 },
     { name: t("analytics"), href: "/analytics", icon: BarChart3 },
   ];

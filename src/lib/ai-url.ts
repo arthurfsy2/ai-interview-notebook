@@ -9,7 +9,8 @@
  * 其他: 自动补全 /v1（如已有 /v1 则跳过）
  */
 export function normalizeAIUrl(baseUrl: string, provider?: string): string {
-  let url = baseUrl.replace(/\/+$/, '');
+  if (!baseUrl || !baseUrl.trim()) return "";
+  let url = baseUrl.trim().replace(/\/+$/, '');
   
   // 自定义模式：原样返回
   if (provider === 'custom') return url;

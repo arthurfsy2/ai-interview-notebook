@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { ArrowLeft, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Mic, MicOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,7 @@ export default function EditInterviewPage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [listening, setListening] = useState(false);
   const [form, setForm] = useState({
     companyName: "",
     position: "",
@@ -38,6 +39,7 @@ export default function EditInterviewPage() {
     rounds: 1,
     salaryRange: "",
     commuteTime: "",
+    workSchedule: "双休",
     notes: "",
   });
 
@@ -57,12 +59,43 @@ export default function EditInterviewPage() {
             rounds: item.rounds || 1,
             salaryRange: item.salaryRange || "",
             commuteTime: item.commuteTime || "",
+            workSchedule: item.workSchedule || "双休",
             notes: item.notes || "",
           });
         }
         setLoading(false);
       });
   }, [id]);
+
+  const handleVoiceInput = () => {
+    if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
+      alert("您的浏览器不支持语音识别，请使用 Chrome 或 Edge");
+      return;
+    }
+    const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = "zh-CN";
+    recognition.interimResults = false;
+    recognition.continuous = true;
+
+    if (listening) {
+      recognition.stop();
+      setListening(false);
+      return;
+    }
+
+    setListening(true);
+    recognition.start();
+    recognition.onresult = (event: any) => {
+      let transcript = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      setForm((prev) => ({ ...prev, notes: prev.notes + transcript }));
+    };
+    recognition.onerror = () => setListening(false);
+    recognition.onend = () => setListening(false);
+  };
 
   const handleSave = async () => {
     setSaving(true);
@@ -161,7 +194,7 @@ export default function EditInterviewPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-4 gap-4">
               <div>
                 <Label>{t("rounds")}</Label>
                 <Input type="number" min={1} value={form.rounds} onChange={(e) => setForm({ ...form, rounds: Number(e.target.value) })} />
@@ -174,10 +207,38 @@ export default function EditInterviewPage() {
                 <Label>{t("commuteTime")}</Label>
                 <Input value={form.commuteTime} onChange={(e) => setForm({ ...form, commuteTime: e.target.value })} />
               </div>
+              <div>
+                <Label>工作制度</Label>
+                <Select value={form.workSchedule} onValueChange={(v) => setForm({ ...form, workSchedule: v })}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="双休">双休</SelectItem>
+                    <SelectItem value="大小周">大小周</SelectItem>
+                    <SelectItem value="单休">单休</SelectItem>
+                    <SelectItem value="996">996</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div>
-              <Label>{t("notes")}</Label>
+              <Label className="flex items-center justify-between mb-1.5">
+                <span>{t("notes")}</span>
+                <button
+                  onClick={handleVoiceInput}
+                  className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full transition-colors ${
+                    listening
+                      ? "bg-red-100 text-red-600 animate-pulse"
+                      : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                  }`}
+                >
+                  {listening ? (
+                    <><MicOff className="h-3 w-3" /> 聆听中...</>
+                  ) : (
+                    <><Mic className="h-3 w-3" /> 语音输入</>
+                  )}
+                </button>
+              </Label>
               <Textarea
                 className="min-h-[120px]"
                 placeholder={t("notesPlaceholder")}
