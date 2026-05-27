@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
 import { useTranslations } from "next-intl";
 import { ArrowLeft, FileSearch, Loader2, Sparkles, CheckCircle2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
@@ -70,7 +70,7 @@ export default function NewPreInterviewPage() {
     try {
       // Use cleaned JD text if BOSS format detected
       const jdToAnalyze = parsed?.detected && parsed?.jdText
-        ? `岗位：${form.position}\n公司：${form.companyName}\n薪资：${parsed.salary}\n城市：${parsed.location}\n经验：${parsed.experience}\n学历：${parsed.education}\n状态：${parsed.listingStatus} ${parsed.companySize} ${parsed.industry}\n福利：${parsed.benefits.join("、")}\n\n职位描述：\n${parsed.jdText}\n\n公司介绍：\n${parsed.companyIntro}`
+        ? `岗位：${form.position}\n公司：${form.companyName}\n薪资：${parsed.salary}\n城市：${parsed.location}\n经验：${parsed.experience}\n学历：${parsed.education}\n状态：${parsed.listingStatus} ${parsed.companySize} ${parsed.industry}\n福利：${parsed.benefits.join("、")}\n${parsed.workAddress ? `工作地址：${parsed.workAddress}\n` : ""}\n职位描述：\n${parsed.jdText}\n\n公司介绍：\n${parsed.companyIntro}`
         : form.jdRawText;
 
       const res = await fetch("/api/pre-interview/analyze", {

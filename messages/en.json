@@ -1,7 +1,9 @@
 {
   "Common": {
     "errorOccurred": "Error occurred: {message}",
-    "retry": "Retry"
+    "retry": "Retry",
+    "loading": "Loading...",
+    "notFound": "Not found"
   },
   "Index": {
     "title": "AI Interview Assistant",
@@ -14,6 +16,15 @@
     "quickNote": "⚡ Quick Note",
     "recentRecords": "Recent Interviews",
     "viewAll": "View All",
+    "featurePreInterviewDesc": "Paste JD → AI company analysis, salary conversion, resume matching → decision report",
+    "featureQuickNote": "Quick Note",
+    "featureQuickNoteDesc": "One-sentence post-interview note + voice input, zero friction",
+    "featureInterviews": "Interviews",
+    "featureInterviewsDesc": "Complete history, AI auto-tagging, structured comparison",
+    "featureAnalytics": "Analytics",
+    "featureAnalyticsDesc": "Cross-record patterns: risk signals, rejection causes, key topics",
+    "sectionFeatures": "Core Features",
+    "sectionFeaturesDesc": "Full interview lifecycle, from invitation to review",
     "stats": {
       "totalInterviews": "Total",
       "passRate": "Pass Rate",
@@ -33,6 +44,9 @@
   },
   "Interview": {
     "title": "Interviews",
+    "loading": "Loading...",
+    "notFound": "Not found",
+    "back": "Back",
     "newRecord": "New Interview",
     "editRecord": "Edit Interview",
     "companyName": "Company",
@@ -75,6 +89,9 @@
   },
   "PreInterview": {
     "title": "Pre-Apply Assessment",
+    "loading": "Loading...",
+    "notFound": "Not found",
+    "back": "Back",
     "newAnalysis": "New Assessment",
     "pasteJD": "Paste JD",
     "jdPlaceholder": "Paste the full JD text here...",
@@ -98,7 +115,9 @@
       "notRecommend": "❌ Not Recommend"
     },
     "linkToInterview": "Link to Interview",
-    "noAnalyses": "No analyses"
+    "noAnalyses": "No analyses",
+    "preferenceMatch": "Preference Match",
+    "workAddress": "Work Address"
   },
   "Profile": {
     "title": "Profile",
@@ -113,7 +132,20 @@
     "workSchedule": "Work Schedule",
     "location": "Location",
     "save": "Save",
-    "saved": "Saved"
+    "saved": "Saved",
+    "priorities": "Decision Preferences",
+    "prioritiesDesc": "Rank what matters most in your job search",
+    "prioritySalary": "Salary",
+    "priorityProximity": "Proximity",
+    "priorityWorkSchedule": "Work Schedule",
+    "priorityStability": "Stability",
+    "priorityIndustry": "Industry Match",
+    "residence": "Home Address",
+    "residenceHint": "Used by pre-interview analysis to calculate commute distance and adjust scoring based on your proximity preference",
+    "residencePlaceholder": "e.g. 350 5th Ave, New York, NY 10118",
+    "moveUp": "Move Up",
+    "moveDown": "Move Down",
+    "notSelected": "Not selected"
   },
   "Settings": {
     "title": "Settings",
@@ -138,16 +170,26 @@
   },
   "Analytics": {
     "title": "Analytics",
+    "loading": "Loading...",
     "stats": "Stats",
     "patterns": "Patterns",
     "topTopics": "Top Topics",
     "redFlagWarning": "Red Flags",
-    "noPatterns": "Need 5+ records"
+    "noPatterns": "Need 5+ records",
+    "totalInterviews": "Total",
+    "passRate": "Pass Rate",
+    "highRiskFlags": "Red Flags",
+    "highRiskCompanies": "High Risk",
+    "countSuffix": ""
   },
   "Companies": {
     "title": "Company",
+    "loading": "Loading...",
     "totalInterviews": "Total",
     "commonTags": "Tags",
     "noCompany": "Not found"
+  },
+  "Timeline": {
+    "viewDetails": "View Details"
   }
 }

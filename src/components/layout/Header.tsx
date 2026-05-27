@@ -31,7 +31,10 @@ export function Header() {
 
   const switchLocale = () => {
     const nextLocale = locale === "en" ? "zh" : "en";
-    router.replace(pathname, { locale: nextLocale });
+    // Strip any existing locale prefix to prevent double-prefixing
+    // (usePathname() may not strip the prefix if useLocale() mismatches the URL locale)
+    const cleanPath = pathname.replace(/^\/(zh|en)(\/|$)/, "/$2");
+    router.replace(cleanPath, { locale: nextLocale });
   };
 
   return (

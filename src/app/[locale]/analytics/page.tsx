@@ -74,10 +74,10 @@ export default function AnalyticsPage() {
           <div className="space-y-6">
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {[
-                { label: "总面试数", value: stats.totalInterviews, color: "text-blue-600", bg: "bg-blue-50" },
-                { label: "通过率", value: `${stats.passRate}%`, color: "text-emerald-600", bg: "bg-emerald-50" },
-                { label: "高风险信号", value: stats.totalRedFlags, color: "text-red-600", bg: "bg-red-50" },
-                { label: "高风险公司", value: stats.highRiskCompanies, color: "text-amber-600", bg: "bg-amber-50" },
+                { label: t("totalInterviews"), value: stats.totalInterviews, color: "text-blue-600", bg: "bg-blue-50" },
+                { label: t("passRate"), value: `${stats.passRate}%`, color: "text-emerald-600", bg: "bg-emerald-50" },
+                { label: t("highRiskFlags"), value: stats.totalRedFlags, color: "text-red-600", bg: "bg-red-50" },
+                { label: t("highRiskCompanies"), value: stats.highRiskCompanies, color: "text-amber-600", bg: "bg-amber-50" },
               ].map((s) => (
                 <Card key={s.label} className="text-center py-4">
                   <div className={`w-10 h-10 rounded-lg ${s.bg} flex items-center justify-center mx-auto mb-2`}>
@@ -104,7 +104,7 @@ export default function AnalyticsPage() {
                             {t.topic}
                           </div>
                         </div>
-                        <span className="text-xs text-slate-500">{t.count}次</span>
+                        <span className="text-xs text-slate-500">{t.count}{t("countSuffix")}</span>
                       </div>
                     ))}
                   </div>
@@ -122,7 +122,7 @@ export default function AnalyticsPage() {
             )}
           </div>
         ) : (
-          <div className="text-center py-12 text-slate-400">加载中...</div>
+          <div className="text-center py-12 text-slate-400">{t("loading")}</div>
         )}
       </main>
       <Footer />

@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useParams } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
+import { useTranslations, useLocale } from "next-intl";
 import {
   ArrowLeft,
   MapPin,
@@ -15,7 +16,7 @@ import {
   FileSearch,
   Tag as TagIcon,
 } from "lucide-react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -36,6 +37,7 @@ const getResultBadge = (result: string) => {
 
 export default function InterviewDetailPage() {
   const t = useTranslations("Interview");
+  const locale = useLocale();
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
@@ -106,7 +108,7 @@ export default function InterviewDetailPage() {
     return (
       <div className="min-h-screen bg-slate-50">
         <Header />
-        <main className="container max-w-2xl mx-auto px-4 py-12 text-center text-slate-400">加载中...</main>
+        <main className="container max-w-2xl mx-auto px-4 py-12 text-center text-slate-400">{t("loading")}</main>
         <Footer />
       </div>
     );
@@ -116,7 +118,7 @@ export default function InterviewDetailPage() {
     return (
       <div className="min-h-screen bg-slate-50">
         <Header />
-        <main className="container max-w-2xl mx-auto px-4 py-12 text-center text-slate-400">记录不存在</main>
+        <main className="container max-w-2xl mx-auto px-4 py-12 text-center text-slate-400">{t("notFound")}</main>
         <Footer />
       </div>
     );
@@ -130,7 +132,7 @@ export default function InterviewDetailPage() {
         <div className="flex items-center justify-between mb-6">
           <button onClick={() => router.back()} className="flex items-center gap-1 text-slate-400 hover:text-slate-700">
             <ArrowLeft className="h-5 w-5" />
-            <span className="text-sm">返回</span>
+            <span className="text-sm">{t("back")}</span>
           </button>
           <div className="flex gap-2">
             <Button size="sm" variant="outline" onClick={() => router.push(`/interviews/${id}/edit`)}>
@@ -156,7 +158,7 @@ export default function InterviewDetailPage() {
               <div className="text-right text-sm">
                 <div className="text-slate-400 mb-1">
                   <Calendar className="h-3.5 w-3.5 inline mr-1" />
-                  {new Date(interview.interviewDate).toLocaleDateString("zh-CN")}
+                  {new Date(interview.interviewDate).toLocaleDateString(locale)}
                 </div>
               </div>
             </div>

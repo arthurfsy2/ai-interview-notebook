@@ -25,6 +25,8 @@ export async function POST(req: NextRequest) {
         targetIndustry: JSON.stringify(body.targetIndustry || []),
         currentSalary: JSON.stringify(body.currentSalary || {}),
         location: body.location,
+        priorities: JSON.stringify(body.priorities || []),
+        residence: JSON.stringify(body.residence || {}),
       },
       create: {
         userId: "local",
@@ -35,6 +37,8 @@ export async function POST(req: NextRequest) {
         targetIndustry: JSON.stringify(body.targetIndustry || []),
         currentSalary: JSON.stringify(body.currentSalary || {}),
         location: body.location || "",
+        priorities: JSON.stringify(body.priorities || []),
+        residence: JSON.stringify(body.residence || {}),
       },
     });
 

@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useTranslations } from "next-intl";
-import Link from "next/link";
+import { useTranslations, useLocale } from "next-intl";
+import { Link } from "@/i18n/routing";
 import { Plus, FileSearch, ChevronRight, Sparkles, Trash2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +19,7 @@ const verdictColors: Record<string, string> = {
 
 export default function PreInterviewListPage() {
   const t = useTranslations("PreInterview");
+  const locale = useLocale();
   const [analyses, setAnalyses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -60,7 +61,7 @@ export default function PreInterviewListPage() {
         </div>
 
         {loading ? (
-          <div className="text-center py-12 text-slate-400">加载中...</div>
+          <div className="text-center py-12 text-slate-400">{t("loading")}</div>
         ) : analyses.length === 0 ? (
           <div className="text-center py-20">
             <FileSearch className="h-16 w-16 text-slate-200 mx-auto mb-4" />
@@ -93,7 +94,7 @@ export default function PreInterviewListPage() {
                         </div>
                         <p className="text-sm text-slate-500">{item.position}</p>
                         <p className="text-xs text-slate-400 mt-1">
-                          {new Date(item.createdAt).toLocaleDateString("zh-CN")}
+                          {new Date(item.createdAt).toLocaleDateString(locale)}
                         </p>
                       </div>
                       <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-blue-500 flex-shrink-0 ml-2" />

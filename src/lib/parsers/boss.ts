@@ -32,6 +32,8 @@ export interface BossParsed {
   jdText: string;
   /** 公司介绍 */
   companyIntro: string;
+  /** 工作地址（从 BOSS JD 提取） */
+  workAddress: string;
 }
 
 /**
@@ -78,6 +80,7 @@ export function parseBossJD(raw: string): BossParsed {
     benefits: [],
     jdText: "",
     companyIntro: "",
+    workAddress: "",
   };
 
   if (!isBossFormat(raw)) return result;
@@ -164,6 +167,12 @@ export function parseBossJD(raw: string): BossParsed {
   const introMatch = raw.match(/公司介绍\s*\n+([\s\S]*?)(?=工商信息|查看全部|BOSS\s*安全提示)/);
   if (introMatch) {
     result.companyIntro = clean(introMatch[1]).substring(0, 1000);
+  }
+
+  // 8. 工作地址
+  const addrMatch = raw.match(/工作地址\s*\n+([^\n]+(?:\n[^\n]+)?)/);
+  if (addrMatch) {
+    result.workAddress = clean(addrMatch[1]);
   }
 
   return result;

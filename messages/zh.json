@@ -1,7 +1,9 @@
 {
   "Common": {
     "errorOccurred": "出错了：{message}",
-    "retry": "重试"
+    "retry": "重试",
+    "loading": "加载中...",
+    "notFound": "记录不存在"
   },
   "Index": {
     "title": "AI 面试全流程助手",
@@ -10,9 +12,19 @@
     "heroDesc": "粘贴 JD 一键分析公司背景、薪资换算、简历匹配度 —— 面试前就知道值不值得去。面试后 AI 自动提取标签、发现模式、给出改进建议。",
     "startAnalysis": "📋 投前评估",
     "preInterview": "投前评估",
+    "newRecord": "新增面试记录",
     "quickNote": "⚡ 快速记录",
     "recentRecords": "最近面试记录",
     "viewAll": "查看全部",
+    "featurePreInterviewDesc": "粘贴 JD → AI 分析公司背景、薪资换算、简历匹配 → 决策报告",
+    "featureQuickNote": "快速录入",
+    "featureQuickNoteDesc": "面试后手机一句话速记 + 语音转文字，零门槛记录",
+    "featureInterviews": "面试记录",
+    "featureInterviewsDesc": "完整的面试历史、AI 自动提取标签、结构化对比",
+    "featureAnalytics": "分析面板",
+    "featureAnalyticsDesc": "跨记录模式发现：高频风险信号、被拒原因分布、核心考察点",
+    "sectionFeatures": "核心功能",
+    "sectionFeaturesDesc": "覆盖面试全流程，从收到邀请到复盘总结",
     "stats": {
       "totalInterviews": "总面试数",
       "passRate": "通过率",
@@ -32,6 +44,9 @@
   },
   "Interview": {
     "title": "面试记录",
+    "loading": "加载中...",
+    "notFound": "记录不存在",
+    "back": "返回",
     "newRecord": "新增面试记录",
     "editRecord": "编辑面试记录",
     "companyName": "公司名称",
@@ -74,6 +89,9 @@
   },
   "PreInterview": {
     "title": "投前评估",
+    "loading": "加载中...",
+    "notFound": "记录不存在",
+    "back": "返回",
     "newAnalysis": "新建评估",
     "pasteJD": "粘贴 JD 文本",
     "jdPlaceholder": "将招聘 JD 原文粘贴到此处...",
@@ -97,7 +115,9 @@
       "notRecommend": "❌ 不建议"
     },
     "linkToInterview": "关联面试记录",
-    "noAnalyses": "暂无投前评估记录"
+    "noAnalyses": "暂无投前评估记录",
+    "preferenceMatch": "偏好匹配度",
+    "workAddress": "工作地址"
   },
   "Profile": {
     "title": "个人档案",
@@ -112,7 +132,20 @@
     "workSchedule": "工作制度",
     "location": "所在城市",
     "save": "保存档案",
-    "saved": "档案已保存"
+    "saved": "档案已保存",
+    "priorities": "决策偏好",
+    "prioritiesDesc": "选择并排序你在求职中最看重的因素",
+    "prioritySalary": "薪资水平",
+    "priorityProximity": "离家距离",
+    "priorityWorkSchedule": "工作制度",
+    "priorityStability": "公司稳定性",
+    "priorityIndustry": "行业匹配",
+    "residence": "家庭地址",
+    "residenceHint": "投前评估会根据您的家庭地址计算通勤距离，结合「离家距离」偏好自动调整打分",
+    "residencePlaceholder": "如：深圳市盐田区深盐路2011号",
+    "moveUp": "上移",
+    "moveDown": "下移",
+    "notSelected": "未选择"
   },
   "Settings": {
     "title": "设置",
@@ -137,16 +170,26 @@
   },
   "Analytics": {
     "title": "分析面板",
+    "loading": "加载中...",
     "stats": "统计概览",
     "patterns": "AI 模式发现",
     "topTopics": "核心考察点 TOP5",
     "redFlagWarning": "风险信号",
-    "noPatterns": "数据不足，至少需要 5 条面试记录才能发现模式"
+    "noPatterns": "数据不足，至少需要 5 条面试记录才能发现模式",
+    "totalInterviews": "总面试数",
+    "passRate": "通过率",
+    "highRiskFlags": "高风险信号",
+    "highRiskCompanies": "高风险公司",
+    "countSuffix": "次"
   },
   "Companies": {
     "title": "公司画像",
+    "loading": "加载中...",
     "totalInterviews": "面试次数",
     "commonTags": "AI 标签",
     "noCompany": "未找到该公司记录"
+  },
+  "Timeline": {
+    "viewDetails": "查看详情"
   }
 }

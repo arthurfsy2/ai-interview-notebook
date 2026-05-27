@@ -139,6 +139,13 @@ export interface CurrentSalary {
   monthsPerYear: number;
 }
 
+export type PriorityKey = 'salary' | 'proximity' | 'workSchedule' | 'stability' | 'industry';
+
+export interface Residence {
+  city: string;
+  district?: string;
+}
+
 export interface UserProfile {
   id: string;
   userId: string;
@@ -149,6 +156,8 @@ export interface UserProfile {
   targetIndustry: string[];
   currentSalary: CurrentSalary;
   location: string;
+  priorities: PriorityKey[];
+  residence: Residence;
 }
 
 // ===== API 响应 =====

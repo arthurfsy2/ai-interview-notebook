@@ -63,6 +63,8 @@ model UserProfile {
   targetIndustry    String   @default("[]")
   currentSalary     String   @default("{}")
   location          String   @default("")
+  priorities        String   @default("[]")
+  residence         String   @default("{}")
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

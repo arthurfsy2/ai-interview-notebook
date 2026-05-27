@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useParams } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
+import { useTranslations, useLocale } from "next-intl";
 import {
   ArrowLeft,
   Building2,
@@ -35,6 +36,7 @@ const verdictColors: Record<string, string> = {
 
 export default function PreInterviewDetailPage() {
   const t = useTranslations("PreInterview");
+  const locale = useLocale();
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
@@ -137,7 +139,7 @@ export default function PreInterviewDetailPage() {
     return (
       <div className="min-h-screen bg-slate-50">
         <Header />
-        <main className="container max-w-2xl mx-auto px-4 py-12 text-center text-slate-400">加载中...</main>
+        <main className="container max-w-2xl mx-auto px-4 py-12 text-center text-slate-400">{t("loading")}</main>
         <Footer />
       </div>
     );
@@ -147,7 +149,7 @@ export default function PreInterviewDetailPage() {
     return (
       <div className="min-h-screen bg-slate-50">
         <Header />
-        <main className="container max-w-2xl mx-auto px-4 py-12 text-center text-slate-400">记录不存在</main>
+        <main className="container max-w-2xl mx-auto px-4 py-12 text-center text-slate-400">{t("notFound")}</main>
         <Footer />
       </div>
     );
@@ -166,7 +168,7 @@ export default function PreInterviewDetailPage() {
         <div className="flex items-center justify-between mb-6">
           <button onClick={() => router.back()} className="flex items-center gap-1 text-slate-400 hover:text-slate-700">
             <ArrowLeft className="h-5 w-5" />
-            <span className="text-sm">返回</span>
+            <span className="text-sm">{t("back")}</span>
           </button>
         </div>
 
@@ -197,6 +199,61 @@ export default function PreInterviewDetailPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Preference Match */}
+        {report?.decision?.preferenceAnalysis && Object.keys(report.decision.preferenceAnalysis).length > 0 && (
+          <Card className="mb-6 border-indigo-200 bg-indigo-50/30">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <Target className="h-4 w-4 text-indigo-600" />
+                {t("preferenceMatch")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {Object.entries(report.decision.preferenceAnalysis).map(([key, val]) => {
+                const item = typeof val === "object" && val !== null ? val : { note: String(val), match: "未评估", scoreImpact: 0 };
+                const match = item.match || "";
+                const note = item.note || "";
+                const impact = item.scoreImpact || 0;
+
+                const isPositive = /完全匹配|正面|优|好/.test(match) || impact > 0;
+                const isNegative = /不匹配|负面|差|远|风险/.test(match) || impact < 0;
+
+                return (
+                  <div
+                    key={key}
+                    className={`p-3 rounded-lg text-sm border ${
+                      isPositive
+                        ? "bg-emerald-50 border-emerald-200"
+                        : isNegative
+                          ? "bg-red-50 border-red-200"
+                          : "bg-white border-slate-100"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-medium text-slate-800">{key}</span>
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${
+                          isPositive ? "bg-emerald-100 text-emerald-700"
+                            : isNegative ? "bg-red-100 text-red-700"
+                            : "bg-slate-100 text-slate-600"
+                        }`}>
+                          {isPositive ? "✅ " : isNegative ? "⚠️ " : ""}{match}
+                        </span>
+                        {impact !== 0 && (
+                          <span className={`text-xs font-bold ${impact > 0 ? "text-emerald-600" : "text-red-600"}`}>
+                            {impact > 0 ? "+" : ""}{impact}分
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-500">{note}</p>
+                  </div>
+                );
+              })}
+            </CardContent>
+          </Card>
+        )}
 
         {report && (
           <>
@@ -333,7 +390,7 @@ export default function PreInterviewDetailPage() {
                   {report._source.webSearchSnippet}
                 </pre>
                 <p className="text-[10px] text-slate-400 mt-2">
-                  搜索时间：{new Date(report._source.searchedAt).toLocaleString("zh-CN")}
+                  搜索时间：{new Date(report._source.searchedAt).toLocaleString(locale)}
                 </p>
               </CardContent>
             )}
@@ -461,7 +518,7 @@ export default function PreInterviewDetailPage() {
                           <div className="text-sm font-medium">{iv.companyName}</div>
                           <div className="text-xs text-slate-500">{iv.position}</div>
                           <div className="text-xs text-slate-400">
-                            {new Date(iv.interviewDate).toLocaleDateString("zh-CN")} · {iv.result}
+                            {new Date(iv.interviewDate).toLocaleDateString(locale)} · {iv.result}
                             {isLinkedToOther && (
                               <span className="ml-2 text-amber-500">⚠ 已关联到其他评估</span>
                             )}

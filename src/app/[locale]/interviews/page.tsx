@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Link from "next/link";
-import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/routing";
+import { useTranslations, useLocale } from "next-intl";
 import {
   Plus,
   Search,
@@ -43,6 +43,7 @@ const getExpStars = (rating: number) => "⭐".repeat(rating) + "  ".repeat(5 - r
 
 export default function InterviewsPage() {
   const t = useTranslations("Interview");
+  const locale = useLocale();
   const [interviews, setInterviews] = useState<Interview[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
@@ -120,7 +121,7 @@ export default function InterviewsPage() {
 
         {/* Interview List */}
         {loading ? (
-          <div className="text-center py-12 text-slate-400">加载中...</div>
+          <div className="text-center py-12 text-slate-400">{t("loading")}</div>
         ) : interviews.length === 0 ? (
           <div className="text-center py-16">
             <BriefcaseBusiness className="h-12 w-12 text-slate-300 mx-auto mb-4" />
@@ -152,7 +153,7 @@ export default function InterviewsPage() {
                         <div className="flex items-center gap-3 text-xs text-slate-400 flex-wrap">
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
-                            {new Date(item.interviewDate).toLocaleDateString("zh-CN")}
+                            {new Date(item.interviewDate).toLocaleDateString(locale)}
                           </span>
                           <span className="flex items-center gap-1">
                             <MapPin className="h-3 w-3" />

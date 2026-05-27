@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { Link } from "@/i18n/routing";
 import {
   FileSearch,
   FileText,
@@ -40,31 +40,31 @@ export default function HomePage() {
   const features = [
     {
       title: t("preInterview"),
-      description: "粘贴 JD → AI 分析公司背景、薪资换算、简历匹配 → 决策报告",
+      description: t("featurePreInterviewDesc"),
       icon: FileSearch,
       color: "text-blue-600",
       bg: "bg-blue-100",
       href: "/pre-interview/new",
     },
     {
-      title: "快速录入",
-      description: "面试后手机一句话速记 + 语音转文字，零门槛记录",
+      title: t("featureQuickNote"),
+      description: t("featureQuickNoteDesc"),
       icon: Mic,
       color: "text-emerald-600",
       bg: "bg-emerald-100",
       href: "/interviews/new?quick=1",
     },
     {
-      title: "面试记录",
-      description: "完整的面试历史、AI 自动提取标签、结构化对比",
+      title: t("featureInterviews"),
+      description: t("featureInterviewsDesc"),
       icon: FileText,
       color: "text-violet-600",
       bg: "bg-violet-100",
       href: "/interviews",
     },
     {
-      title: "分析面板",
-      description: "跨记录模式发现：高频风险信号、被拒原因分布、核心考察点",
+      title: t("featureAnalytics"),
+      description: t("featureAnalyticsDesc"),
       icon: BarChart3,
       color: "text-amber-600",
       bg: "bg-amber-100",
@@ -147,8 +147,8 @@ export default function HomePage() {
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
             <div className="text-center mb-10 space-y-2">
-              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">核心功能</h2>
-              <p className="text-slate-500">覆盖面试全流程，从收到邀请到复盘总结</p>
+              <h2 className="text-2xl sm:text-3xl font-bold text-slate-900">{t("sectionFeatures")}</h2>
+              <p className="text-slate-500">{t("sectionFeaturesDesc")}</p>
             </div>
 
             <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">

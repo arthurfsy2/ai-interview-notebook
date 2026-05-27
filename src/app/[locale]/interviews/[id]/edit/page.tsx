@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useParams } from "next/navigation";
+import { useRouter } from "@/i18n/routing";
+import { useTranslations, useLocale } from "next-intl";
 import { ArrowLeft, Save, Loader2, Mic, MicOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ import type { Interview } from "@/types";
 
 export default function EditInterviewPage() {
   const t = useTranslations("Interview");
+  const locale = useLocale();
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
@@ -74,7 +76,7 @@ export default function EditInterviewPage() {
     }
     const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
     const recognition = new SpeechRecognition();
-    recognition.lang = "zh-CN";
+    recognition.lang = locale === "en" ? "en-US" : "zh-CN";
     recognition.interimResults = false;
     recognition.continuous = true;
 

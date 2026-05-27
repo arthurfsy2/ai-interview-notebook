@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useTranslations } from "next-intl";
-import Link from "next/link";
+import { useTranslations, useLocale } from "next-intl";
+import { Link } from "@/i18n/routing";
 import { Building2, ChevronRight, Tag, AlertTriangle, CheckCircle, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -27,6 +27,7 @@ const resultPriority: Record<string, number> = {
 
 export default function CompaniesPage() {
   const t = useTranslations("Companies");
+  const locale = useLocale();
   const [profiles, setProfiles] = useState<CompanyProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -108,7 +109,7 @@ export default function CompaniesPage() {
         <p className="text-sm text-slate-500 mb-6">汇总每家公司的面试记录、AI 标签和分析报告</p>
 
         {loading ? (
-          <div className="text-center py-12 text-slate-400">加载中...</div>
+          <div className="text-center py-12 text-slate-400">{t("loading")}</div>
         ) : profiles.length === 0 ? (
           <div className="text-center py-16">
             <Building2 className="h-12 w-12 text-slate-300 mx-auto mb-4" />
@@ -128,7 +129,7 @@ export default function CompaniesPage() {
                         </Badge>
                         <span>{profile.resultSummary}</span>
                         <span>· 均{profile.avgRating}⭐</span>
-                        <span>· 最近 {new Date(profile.latestDate).toLocaleDateString("zh-CN")}</span>
+                        <span>· 最近 {new Date(profile.latestDate).toLocaleDateString(locale)}</span>
                       </div>
                     </div>
                     <Link href={`/interviews?search=${encodeURIComponent(profile.name)}`}>

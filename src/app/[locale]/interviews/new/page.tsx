@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/routing";
+import { useTranslations, useLocale } from "next-intl";
 import { ArrowLeft, Save, Mic, MicOff } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,7 +30,7 @@ function useVoiceInput() {
 
     const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
     const recognition = new SpeechRecognition();
-    recognition.lang = "zh-CN";
+    recognition.lang = locale === "en" ? "en-US" : "zh-CN";
     recognition.interimResults = false;
     recognition.continuous = true;
 
@@ -59,6 +59,7 @@ function useVoiceInput() {
 
 export default function NewInterviewPage() {
   const t = useTranslations("Interview");
+  const locale = useLocale();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const { listening, startListening } = useVoiceInput();
