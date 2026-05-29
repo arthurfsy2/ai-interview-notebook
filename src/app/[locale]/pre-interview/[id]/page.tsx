@@ -365,6 +365,156 @@ export default function PreInterviewDetailPage() {
                 </CardContent>
               </Card>
             )}
+
+            {/* Company Culture (P0) */}
+            {report.companyCulture && (
+              <Card className="mb-4">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Building2 className="h-4 w-4 text-purple-600" />
+                    公司文化与口碑
+                    <span className="text-[10px] font-normal text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">搜索+AI</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm space-y-2">
+                  <div className="flex gap-1 flex-wrap">
+                    {report.companyCulture.keywords?.map((k: string) => (
+                      <Badge key={k} className="bg-purple-100 text-purple-700">{k}</Badge>
+                    ))}
+                  </div>
+                  <div>
+                    <span className="text-slate-500">员工口碑：</span>
+                    <Badge className={`ml-1 ${
+                      report.companyCulture.employeeSentiment === "积极" ? "bg-emerald-100 text-emerald-700" :
+                      report.companyCulture.employeeSentiment === "消极" ? "bg-red-100 text-red-700" :
+                      "bg-slate-100 text-slate-600"
+                    }`}>
+                      {report.companyCulture.employeeSentiment}
+                    </Badge>
+                  </div>
+                  {report.companyCulture.highlights?.length > 0 && (
+                    <div>
+                      <span className="text-emerald-600 text-xs">✓ 正面评价：</span>
+                      {report.companyCulture.highlights.map((h: string, i: number) => (
+                        <p key={i} className="text-xs text-slate-600">+ {h}</p>
+                      ))}
+                    </div>
+                  )}
+                  {report.companyCulture.warnings?.length > 0 && (
+                    <div>
+                      <span className="text-red-500 text-xs">⚠ 负面信号：</span>
+                      {report.companyCulture.warnings.map((w: string, i: number) => (
+                        <p key={i} className="text-xs text-red-600">- {w}</p>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Work Intensity (P0) */}
+            {report.workIntensity && (
+              <Card className="mb-4">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <AlertTriangle className="h-4 w-4 text-orange-600" />
+                    加班与工作强度
+                    <span className="text-[10px] font-normal text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">AI分析</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm space-y-2">
+                  <div className="flex gap-4">
+                    <div>
+                      <span className="text-slate-500">加班程度：</span>
+                      <Badge className={`ml-1 ${
+                        report.workIntensity.expectedOvertime === "低" ? "bg-emerald-100 text-emerald-700" :
+                        report.workIntensity.expectedOvertime === "高" ? "bg-red-100 text-red-700" :
+                        "bg-amber-100 text-amber-700"
+                      }`}>
+                        {report.workIntensity.expectedOvertime}
+                      </Badge>
+                    </div>
+                    <div>
+                      <span className="text-slate-500">周末工作：</span>
+                      <Badge className={`ml-1 ${
+                        report.workIntensity.weekendWork === "无" ? "bg-emerald-100 text-emerald-700" :
+                        report.workIntensity.weekendWork === "经常" ? "bg-red-100 text-red-700" :
+                        "bg-amber-100 text-amber-700"
+                      }`}>
+                        {report.workIntensity.weekendWork}
+                      </Badge>
+                    </div>
+                    <div>
+                      <span className="text-slate-500">加班补偿：</span>
+                      <Badge className="bg-slate-100 text-slate-700 ml-1">{report.workIntensity.compensation}</Badge>
+                    </div>
+                  </div>
+                  {report.workIntensity.signals?.length > 0 && (
+                    <div>
+                      <span className="text-orange-600 text-xs">信号词：</span>
+                      <div className="flex gap-1 flex-wrap mt-1">
+                        {report.workIntensity.signals.map((s: string, i: number) => (
+                          <Badge key={i} variant="outline" className="text-xs">{s}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Benefits Detail (P0) */}
+            {report.benefitsDetail && (
+              <Card className="mb-4">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-base flex items-center gap-2">
+                    <Banknote className="h-4 w-4 text-teal-600" />
+                    福利待遇详解
+                    <span className="text-[10px] font-normal text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">AI提取</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="text-sm space-y-2">
+                  <div className="flex gap-4">
+                    <div>
+                      <span className="text-slate-500">五险一金：</span>
+                      <Badge className={`ml-1 ${
+                        report.benefitsDetail.insurance === "五险一金" ? "bg-emerald-100 text-emerald-700" :
+                        report.benefitsDetail.insurance === "仅社保" ? "bg-amber-100 text-amber-700" :
+                        "bg-slate-100 text-slate-600"
+                      }`}>
+                        {report.benefitsDetail.insurance}
+                      </Badge>
+                    </div>
+                    <div>
+                      <span className="text-slate-500">年终奖：</span>
+                      <Badge className={`ml-1 ${
+                        report.benefitsDetail.annualBonus === "有" ? "bg-emerald-100 text-emerald-700" :
+                        report.benefitsDetail.annualBonus === "无" ? "bg-amber-100 text-amber-700" :
+                        "bg-slate-100 text-slate-600"
+                      }`}>
+                        {report.benefitsDetail.annualBonus}
+                      </Badge>
+                    </div>
+                    {report.benefitsDetail.leaveDays && (
+                      <div>
+                        <span className="text-slate-500">年假：</span>
+                        <span className="text-slate-700 ml-1">{report.benefitsDetail.leaveDays}</span>
+                      </div>
+                    )}
+                  </div>
+                  {report.benefitsDetail.perks?.length > 0 && (
+                    <div>
+                      <span className="text-slate-500">其他福利：</span>
+                      <div className="flex gap-1 flex-wrap mt-1">
+                        {report.benefitsDetail.perks.map((p: string, i: number) => (
+                          <Badge key={i} className="bg-teal-100 text-teal-700">{p}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
           </>
         )}
 

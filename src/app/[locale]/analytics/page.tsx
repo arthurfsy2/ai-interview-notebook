@@ -93,18 +93,18 @@ export default function AnalyticsPage() {
                 <CardHeader><CardTitle className="text-base">{t("topTopics")}</CardTitle></CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    {stats.topTopics.map((t, i) => (
-                      <div key={t.topic} className="flex items-center gap-3">
+                    {stats.topTopics.map((topicItem, i) => (
+                      <div key={topicItem.topic} className="flex items-center gap-3">
                         <span className="text-xs font-bold text-slate-400 w-4">#{i + 1}</span>
                         <div className="flex-1 bg-slate-100 rounded-full h-6 overflow-hidden">
                           <div
                             className="bg-blue-500 h-full rounded-full flex items-center px-2 text-xs text-white"
-                            style={{ width: `${(t.count / stats.topTopics[0].count) * 100}%` }}
+                            style={{ width: `${(topicItem.count / stats.topTopics[0].count) * 100}%` }}
                           >
-                            {t.topic}
+                            {topicItem.topic}
                           </div>
                         </div>
-                        <span className="text-xs text-slate-500">{t.count}{t("countSuffix")}</span>
+                        <span className="text-xs text-slate-500">{topicItem.count}{t("countSuffix")}</span>
                       </div>
                     ))}
                   </div>

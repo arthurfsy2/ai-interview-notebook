@@ -107,6 +107,9 @@
     "jdAnalysis": "JD",
     "salaryConversion": "Salary",
     "resumeMatch": "Match",
+    "companyCulture": "Culture & Reviews",
+    "workIntensity": "Work Intensity",
+    "benefitsDetail": "Benefits",
     "decision": "Decision",
     "verdict": {
       "recommend": "✅ Recommend",

@@ -87,6 +87,28 @@ export interface CareerAssessment {
   notes: string;
 }
 
+export interface CompanyCulture {
+  keywords: string[];
+  employeeSentiment: '积极' | '中性' | '消极';
+  highlights: string[];
+  warnings: string[];
+  source: string;
+}
+
+export interface WorkIntensity {
+  expectedOvertime: '低' | '中' | '高';
+  signals: string[];
+  compensation: '有加班费' | '调休' | '无补偿' | '未提及';
+  weekendWork: '无' | '偶尔' | '经常';
+}
+
+export interface BenefitsDetail {
+  insurance: '五险一金' | '仅社保' | '未提及';
+  annualBonus: '有' | '无' | '未提及';
+  perks: string[];
+  leaveDays: string;
+}
+
 export interface DecisionResult {
   verdict: '建议去' | '可考虑' | '谨慎' | '不建议';
   score: number;
@@ -117,6 +139,9 @@ export interface PreInterviewAnalysisResult {
   salaryConversion: SalaryConversion;
   resumeMatch: ResumeMatch;
   careerAssessment: CareerAssessment;
+  companyCulture?: CompanyCulture;
+  workIntensity?: WorkIntensity;
+  benefitsDetail?: BenefitsDetail;
   decision: DecisionResult;
 }
 

@@ -54,7 +54,13 @@ async function searchCompanyBackground(companyName: string, altName?: string): P
       secondary = await doSearch(`${altName} 公司 招聘`);
     }
 
-    const merged = [primary, secondary].filter(Boolean).join("\n");
+    // Search for employee reviews and overtime info (P0 enhancement)
+    let culture = "";
+    try {
+      culture = await doSearch(`${companyName} 员工评价 脉脉 看准 加班 工作强度`);
+    } catch {}
+
+    const merged = [primary, secondary, culture].filter(Boolean).join("\n");
     return merged;
   } catch (e: any) {
     console.warn("[pre-interview] WebSearch error:", e.message);
@@ -221,6 +227,9 @@ ${companyBackground ? `\n公司背景信息（来自搜索引擎）：\n${compan
   "salaryConversion": {"targetSchedule":"工作制度","equivalentMonthly":0,"equivalentAnnual":0,"premium":0,"premiumPercent":0,"formula":"换算说明"},
   "resumeMatch": {"overallScore":0,"skillMatch":0,"experienceMatch":0,"industryMatch":0,"matchDetails":[],"gapDetails":[]},
   "careerAssessment": {"outlook":"积极|中性|消极","growthPotential":0,"skillGrowth":[],"titleProgression":"","notes":""},
+  "companyCulture": {"keywords":["企业文化关键词"],"employeeSentiment":"积极|中性|消极","highlights":["正面评价"],"warnings":["负面信号"],"source":"数据来源"},
+  "workIntensity": {"expectedOvertime":"低|中|高","signals":["加班信号词"],"compensation":"有加班费|调休|无补偿|未提及","weekendWork":"无|偶尔|经常"},
+  "benefitsDetail": {"insurance":"五险一金|仅社保|未提及","annualBonus":"有|无|未提及","perks":["福利项目"],"leaveDays":"年假天数或未提及"},
   "decision": {"verdict":"建议去|可考虑|谨慎|不建议","score":0,"pros":[],"cons":[],"summary":"","preferenceAnalysis":{"薪资水平":{"match":"完全匹配|部分匹配|不匹配|待确认","scoreImpact":0,"note":"与用户当前薪资对比"},"离家距离":{"match":"完全匹配|部分匹配|不匹配|待确认","scoreImpact":0,"note":"JD地址与家庭地址的距离"}}}
 }`;
 
