@@ -36,7 +36,6 @@
     "home": "Home",
     "interviews": "Interviews",
     "preInterview": "Pre-Apply",
-    "companies": "Companies",
     "analytics": "Analytics",
     "profile": "Profile",
     "settings": "Settings",
@@ -184,16 +183,6 @@
     "highRiskFlags": "Red Flags",
     "highRiskCompanies": "High Risk",
     "countSuffix": ""
-  },
-  "Companies": {
-    "title": "Company",
-    "loading": "Loading...",
-    "totalInterviews": "Total",
-    "commonTags": "Tags",
-    "noCompany": "Not found",
-    "detailBack": "Back to companies",
-    "interviewCount": "{count} interviews",
-    "allInterviews": "Interviews"
   },
   "Timeline": {
     "viewDetails": "View Details"

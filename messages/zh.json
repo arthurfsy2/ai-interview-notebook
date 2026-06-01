@@ -36,7 +36,6 @@
     "home": "首页",
     "interviews": "面试记录",
     "preInterview": "投前评估",
-    "companies": "公司画像",
     "analytics": "分析面板",
     "profile": "个人档案",
     "settings": "设置",
@@ -184,16 +183,6 @@
     "highRiskFlags": "高风险信号",
     "highRiskCompanies": "高风险公司",
     "countSuffix": "次"
-  },
-  "Companies": {
-    "title": "公司画像",
-    "loading": "加载中...",
-    "totalInterviews": "面试次数",
-    "commonTags": "AI 标签",
-    "noCompany": "未找到该公司记录",
-    "detailBack": "返回公司列表",
-    "interviewCount": "{count} 次面试",
-    "allInterviews": "面试记录"
   },
   "Timeline": {
     "viewDetails": "查看详情"

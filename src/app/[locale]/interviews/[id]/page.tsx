@@ -15,6 +15,9 @@ import {
   Loader2,
   FileSearch,
   Tag as TagIcon,
+  Building2,
+  AlertTriangle,
+  CheckCircle,
 } from "lucide-react";
 import { Link } from "@/i18n/routing";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -48,6 +51,7 @@ export default function InterviewDetailPage() {
   const [aiTags, setAiTags] = useState<AITags | null>(null);
   const [aiInsights, setAiInsights] = useState<AIInsights | null>(null);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
+  const [siblingInterviews, setSiblingInterviews] = useState<Interview[]>([]);
 
   useEffect(() => {
     fetch(`/api/interviews/${id}`)
@@ -61,6 +65,16 @@ export default function InterviewDetailPage() {
           if (d.data.aiInsights) {
             try { setAiInsights(JSON.parse(d.data.aiInsights)); } catch {}
           }
+          // Fetch sibling interviews at the same company
+          fetch(`/api/interviews?search=${encodeURIComponent(d.data.companyName)}`)
+            .then((r) => r.json())
+            .then((sd) => {
+              if (sd.success) {
+                setSiblingInterviews(
+                  sd.data.filter((i: Interview) => i.companyName === d.data.companyName && i.id !== id)
+                );
+              }
+            });
         }
         setLoading(false);
       });
@@ -180,6 +194,104 @@ export default function InterviewDetailPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Company Info — aggregated from all interviews at this company */}
+        {(() => {
+          const allAtCompany = [interview, ...siblingInterviews];
+          const redFlags: string[] = [];
+          const greenFlags: string[] = [];
+          allAtCompany.forEach((i) => {
+            if (i.aiTags) {
+              try {
+                const tags = JSON.parse(i.aiTags as unknown as string);
+                if (tags.redFlags) redFlags.push(...tags.redFlags);
+                if (tags.greenFlags) greenFlags.push(...tags.greenFlags);
+              } catch {}
+            }
+          });
+          const uniqueRed = [...new Set(redFlags)];
+          const uniqueGreen = [...new Set(greenFlags)];
+          const totalInterviews = allAtCompany.length;
+          const linkedPre = interview.preInterviewAnalysis;
+
+          if (totalInterviews <= 1 && uniqueRed.length === 0 && uniqueGreen.length === 0 && !linkedPre) {
+            return null;
+          }
+
+          return (
+            <Card className="mb-6 border-slate-200">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-blue-500" />
+                  公司信息
+                  {totalInterviews > 1 && (
+                    <Badge variant="secondary" className="text-xs">{totalInterviews} 次面试</Badge>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {/* Aggregated flags */}
+                {uniqueRed.length > 0 && (
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="h-3.5 w-3.5 text-red-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex gap-1 flex-wrap">
+                      {uniqueRed.map((f) => (
+                        <span key={f} className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-600">{f}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {uniqueGreen.length > 0 && (
+                  <div className="flex items-start gap-2">
+                    <CheckCircle className="h-3.5 w-3.5 text-emerald-400 mt-0.5 flex-shrink-0" />
+                    <div className="flex gap-1 flex-wrap">
+                      {uniqueGreen.map((f) => (
+                        <span key={f} className="text-xs px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600">{f}</span>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Pre-interview analysis link */}
+                {linkedPre && (
+                  <div className="flex items-center gap-2 text-sm">
+                    <FileSearch className="h-3.5 w-3.5 text-blue-500" />
+                    <Link href={`/pre-interview/${linkedPre.id}`} className="text-blue-600 hover:underline">
+                      查看投前评估报告
+                      {linkedPre.verdict && (
+                        <Badge className={`ml-1 text-xs ${linkedPre.verdict === "建议去" ? "bg-emerald-100 text-emerald-700" : linkedPre.verdict === "可考虑" ? "bg-blue-100 text-blue-700" : linkedPre.verdict === "谨慎" ? "bg-amber-100 text-amber-700" : "bg-red-100 text-red-700"}`}>
+                          {linkedPre.verdict}
+                        </Badge>
+                      )}
+                    </Link>
+                  </div>
+                )}
+
+                {/* Sibling interviews */}
+                {siblingInterviews.length > 0 && (
+                  <div>
+                    <p className="text-xs text-slate-500 mb-1.5">该公司其他面试记录：</p>
+                    <div className="space-y-1.5">
+                      {siblingInterviews.map((si) => (
+                        <div
+                          key={si.id}
+                          className="flex items-center gap-2 text-sm cursor-pointer hover:bg-slate-50 rounded-lg px-2 py-1 -mx-2 transition-colors"
+                          onClick={() => router.push(`/interviews/${si.id}`)}
+                        >
+                          <Badge className={`${getResultBadge(si.result)} text-xs`}>{si.result}</Badge>
+                          <span className="text-slate-700 truncate">{si.position}</span>
+                          <span className="text-xs text-slate-400 ml-auto flex-shrink-0">
+                            {new Date(si.interviewDate).toLocaleDateString(locale)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })()}
 
         {/* Notes */}
         {interview.notes && (

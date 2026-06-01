@@ -6,7 +6,6 @@ import {
   FileSearch,
   FileText,
   BarChart3,
-  Building2,
   Settings,
   Languages,
   Menu,
@@ -25,7 +24,6 @@ export function Header() {
   const navItems = [
     { name: t("preInterview"), href: "/pre-interview", icon: FileSearch },
     { name: t("interviews"), href: "/interviews", icon: FileText },
-    { name: t("companies"), href: "/companies", icon: Building2 },
     { name: t("analytics"), href: "/analytics", icon: BarChart3 },
   ];
 
