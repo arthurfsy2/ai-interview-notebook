@@ -190,7 +190,10 @@
     "loading": "Loading...",
     "totalInterviews": "Total",
     "commonTags": "Tags",
-    "noCompany": "Not found"
+    "noCompany": "Not found",
+    "detailBack": "Back to companies",
+    "interviewCount": "{count} interviews",
+    "allInterviews": "Interviews"
   },
   "Timeline": {
     "viewDetails": "View Details"

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/routing";
+import { useRouter } from "@/i18n/routing";
 import { Building2, ChevronRight, Tag, AlertTriangle, CheckCircle, ExternalLink } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -28,6 +29,7 @@ const resultPriority: Record<string, number> = {
 export default function CompaniesPage() {
   const t = useTranslations("Companies");
   const locale = useLocale();
+  const router = useRouter();
   const [profiles, setProfiles] = useState<CompanyProfile[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -118,7 +120,11 @@ export default function CompaniesPage() {
         ) : (
           <div className="space-y-4">
             {profiles.map((profile) => (
-              <Card key={profile.name} className="hover:shadow-md transition-all">
+              <Card
+                key={profile.name}
+                className="hover:shadow-md transition-all cursor-pointer group"
+                onClick={() => router.push(`/companies/${encodeURIComponent(profile.name)}`)}
+              >
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between mb-3">
                     <div>
@@ -132,9 +138,7 @@ export default function CompaniesPage() {
                         <span>· 最近 {new Date(profile.latestDate).toLocaleDateString(locale)}</span>
                       </div>
                     </div>
-                    <Link href={`/interviews?search=${encodeURIComponent(profile.name)}`}>
-                      <ChevronRight className="h-5 w-5 text-slate-300 hover:text-blue-500" />
-                    </Link>
+                    <ChevronRight className="h-5 w-5 text-slate-300 group-hover:text-blue-500 flex-shrink-0" />
                   </div>
 
                   {/* Red flags */}

@@ -190,7 +190,10 @@
     "loading": "加载中...",
     "totalInterviews": "面试次数",
     "commonTags": "AI 标签",
-    "noCompany": "未找到该公司记录"
+    "noCompany": "未找到该公司记录",
+    "detailBack": "返回公司列表",
+    "interviewCount": "{count} 次面试",
+    "allInterviews": "面试记录"
   },
   "Timeline": {
     "viewDetails": "查看详情"
