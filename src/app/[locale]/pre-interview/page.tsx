@@ -1,14 +1,22 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/routing";
-import { Plus, FileSearch, ChevronRight, Sparkles, Trash2 } from "lucide-react";
+import { Plus, FileSearch, ChevronRight, Trash2, Search, X, SlidersHorizontal } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const verdictColors: Record<string, string> = {
   "建议去": "bg-emerald-100 text-emerald-700",
@@ -22,16 +30,46 @@ export default function PreInterviewListPage() {
   const locale = useLocale();
   const [analyses, setAnalyses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [verdictFilter, setVerdictFilter] = useState("");
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [showFilters, setShowFilters] = useState(false);
+
+  const fetchAnalyses = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (search) params.set("search", search);
+      if (verdictFilter) params.set("verdict", verdictFilter);
+      params.set("sortBy", sortBy);
+      params.set("sortOrder", sortOrder);
+
+      const res = await fetch(`/api/pre-interview?${params.toString()}`);
+      const d = await res.json();
+      if (d.success) setAnalyses(d.data || []);
+    } catch (e) {}
+    finally {
+      setLoading(false);
+    }
+  }, [search, verdictFilter, sortBy, sortOrder]);
 
   useEffect(() => {
-    fetch("/api/pre-interview")
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.success) setAnalyses(d.data || []);
-      })
-      .catch(() => {})
-      .finally(() => setLoading(false));
-  }, []);
+    fetchAnalyses();
+  }, [fetchAnalyses]);
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+  };
+
+  const clearFilters = () => {
+    setSearch("");
+    setVerdictFilter("");
+    setSortBy("createdAt");
+    setSortOrder("desc");
+  };
+
+  const hasActiveFilters = search || verdictFilter || sortBy !== "createdAt" || sortOrder !== "desc";
 
   const handleDelete = async (id: string, e: React.MouseEvent) => {
     e.preventDefault();
@@ -58,6 +96,94 @@ export default function PreInterviewListPage() {
               {t("newAnalysis")}
             </Button>
           </Link>
+        </div>
+
+        {/* Search and Filter Section */}
+        <div className="mb-6 space-y-3">
+          <div className="flex items-center gap-2">
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+              <Input
+                type="text"
+                placeholder={t("searchPlaceholder")}
+                value={search}
+                onChange={(e) => handleSearchChange(e.target.value)}
+                className="pl-9 pr-4"
+              />
+              {search && (
+                <button
+                  onClick={() => setSearch("")}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowFilters(!showFilters)}
+              className={showFilters ? "bg-blue-50 border-blue-200" : ""}
+            >
+              <SlidersHorizontal className="h-4 w-4 mr-1" />
+              {t("filter")}
+            </Button>
+          </div>
+
+          {/* Expanded Filters */}
+          {showFilters && (
+            <Card className="p-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div>
+                  <label className="text-xs font-medium text-slate-600 mb-1 block">{t("verdict")}</label>
+                  <Select value={verdictFilter} onValueChange={setVerdictFilter}>
+                    <SelectTrigger>
+                      <SelectValue placeholder={t("all")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">{t("all")}</SelectItem>
+                      <SelectItem value="建议去">建议去</SelectItem>
+                      <SelectItem value="可考虑">可考虑</SelectItem>
+                      <SelectItem value="谨慎">谨慎</SelectItem>
+                      <SelectItem value="不建议">不建议</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-600 mb-1 block">{t("sortBy")}</label>
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="createdAt">{t("createdAt")}</SelectItem>
+                      <SelectItem value="score">{t("score")}</SelectItem>
+                      <SelectItem value="companyName">Company</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <label className="text-xs font-medium text-slate-600 mb-1 block">{t("sortOrder")}</label>
+                  <Select value={sortOrder} onValueChange={setSortOrder}>
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="desc">{t("descending")}</SelectItem>
+                      <SelectItem value="asc">{t("ascending")}</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="flex items-end">
+                  {hasActiveFilters && (
+                    <Button variant="ghost" size="sm" onClick={clearFilters} className="text-slate-500">
+                      {t("clearFilters")}
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </Card>
+          )}
         </div>
 
         {loading ? (

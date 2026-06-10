@@ -10,7 +10,6 @@ export interface AITags {
   salarySignal: '高' | '中' | '低' | '未透露' | null;
   commuteAssessment: '近' | '中等' | '远' | null;
   rejectionReason: '技术不匹配' | '业务调整' | '薪资谈不拢' | '竞争激烈' | '其他' | null;
-  rejectionControllability: '可控(个人可提升)' | '不可控(外部因素)' | '未知' | null;
 }
 
 export interface AIInsights {
@@ -18,6 +17,8 @@ export interface AIInsights {
   keyFindings: string[];
   improvementSuggestions: string[];
   prepFocus: string[];
+  confidence: number;       // 0-100, AI's self-assessed confidence
+  dataQuality: 'high' | 'medium' | 'low'; // Based on notes length and detail
 }
 
 export interface Interview {
@@ -154,6 +155,27 @@ export interface BeforeAfterComparison {
   keyDifferences: string[];
   lessonsLearned: string[];
   createdAt: string;
+}
+
+// ===== 模式分析 (P0) =====
+
+export interface PatternAnalysisResult {
+  highFrequencyRedFlags: { flag: string; count: number; percentage: number }[];
+  highFrequencyGreenFlags: { flag: string; count: number; percentage: number }[];
+  dominantInterviewerStyles: { style: string; count: number }[];
+  avgExperienceRating: number;
+  passRate: number;
+  topRejectionReasons: { reason: string; count: number }[];
+  preferencePattern: string[];  // AI-generated summary of user's preference tendencies
+  growthTrajectory: {
+    trend: 'improving' | 'stable' | 'declining';
+    evidence: string[];
+    recommendations: string[];
+  };
+  topicDistribution: { topic: string; count: number; trend: 'increasing' | 'stable' | 'decreasing' }[];
+  confidence: number;  // 0-1, based on data quantity and quality
+  summary: string;  // AI-generated overall pattern summary
+  analyzedAt: string;
 }
 
 // ===== 用户档案 =====

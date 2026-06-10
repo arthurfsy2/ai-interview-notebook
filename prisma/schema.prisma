@@ -53,6 +53,18 @@ model PreInterviewAnalysis {
   @@map("pre_interview_analyses")
 }
 
+model PatternAnalysis {
+  id              String   @id @default(cuid())
+  userId          String   @default("local")
+  interviewCount  Int      // Number of interviews included in this analysis
+  analysisResult  String   // JSON: PatternAnalysisResult
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([userId])
+  @@map("pattern_analyses")
+}
+
 model UserProfile {
   id                String   @id @default(cuid())
   userId            String   @unique @default("local")

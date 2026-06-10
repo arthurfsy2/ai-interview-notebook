@@ -1,11 +1,50 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
+    const { searchParams } = new URL(req.url);
+    const search = searchParams.get("search") || "";
+    const verdict = searchParams.get("verdict") || "";
+    const minScore = searchParams.get("minScore");
+    const maxScore = searchParams.get("maxScore");
+    const sortBy = searchParams.get("sortBy") || "createdAt";
+    const sortOrder = searchParams.get("sortOrder") || "desc";
+
+    const where: any = { userId: "local" };
+
+    // 搜索公司名称或职位
+    if (search) {
+      where.OR = [
+        { companyName: { contains: search } },
+        { position: { contains: search } },
+      ];
+    }
+
+    // 过滤评估结果
+    if (verdict) {
+      where.verdict = verdict;
+    }
+
+    // 过滤评分范围
+    if (minScore || maxScore) {
+      where.score = {};
+      if (minScore) where.score.gte = parseInt(minScore);
+      if (maxScore) where.score.lte = parseInt(maxScore);
+    }
+
+    const orderBy: any = {};
+    if (sortBy === "score") {
+      orderBy.score = sortOrder;
+    } else if (sortBy === "companyName") {
+      orderBy.companyName = sortOrder;
+    } else {
+      orderBy.createdAt = sortOrder;
+    }
+
     const analyses = await prisma.preInterviewAnalysis.findMany({
-      where: { userId: "local" },
-      orderBy: { createdAt: "desc" },
+      where,
+      orderBy,
     });
     return NextResponse.json({ success: true, data: analyses });
   } catch (error) {

@@ -14,18 +14,46 @@ const SYSTEM_PROMPT = `分析面试备注，只返回JSON（不要其他内容�
   "salarySignal": "高"|"中"|"低"|"未透露"|null,
   "commuteAssessment": "近"|"中等"|"远"|null,
   "rejectionReason": "技术不匹配"|"业务调整"|"薪资谈不拢"|"竞争激烈"|"其他"|null,
-  "rejectionControllability": "可控"|"不可控"|"未知"|null,
   "summary": "一句话总结",
   "keyFindings": ["关键发现1-3条"],
   "improvementSuggestions": ["改进建议1-3条"],
-  "prepFocus": ["下次准备重点1-3条"]
+  "prepFocus": ["下次准备重点1-3条"],
+  "confidence": 85,
+  "dataQuality": "high"|"medium"|"low"
 }
+
+条件输出规则：
+- 仅当面试结果为"被拒"时，才分析 rejectionReason
+- 当结果为"通过"、"主动放弃"、"无消息"、"待定"时，rejectionReason 必须为 null
+
+置信度评估规则（confidence，0-100）：
+- 笔记详细（>200字，含具体问题和细节）：80-100
+- 笔记一般（50-200字，有基本描述）：50-80
+- 笔记简短（<50字，信息有限）：20-50
+
+数据质量评估规则（dataQuality）：
+- high: 笔记详细，包含具体问题、面试官风格、技术考察点等
+- medium: 笔记一般，有基本描述但缺少细节
+- low: 笔记简短，信息有限
+
 无法判断的字段用null，空数组用[]`;
 
 const FEW_SHOT_EXAMPLE = `示例输入："3轮到高管，问大并发架构"
 输出：{"interviewerStyle":"专业","interviewDepth":"深(多轮+高管)","questions":["大并发架构设计"],"keyTopics":["系统架构"],"redFlags":[],"greenFlags":["面试流程专业","多轮面试"],"salarySignal":null,"commuteAssessment":null,"rejectionReason":null,"rejectionControllability":null,"summary":"3轮到高管，考察大并发架构能力","keyFindings":["流程规范","考察架构能力"],"improvementSuggestions":["系统梳理架构知识"],"prepFocus":["大并发架构"]}`;
 
-export async function analyzeNotes(notes: string, position?: string) {
+export async function analyzeNotes(
+  notes: string,
+  position?: string,
+  context?: {
+    result?: string;          // '通过' | '被拒' | etc.
+    interviewMode?: string;   // '线上' | '线下' | '混合'
+    rounds?: number;          // Number of rounds completed
+    experienceRating?: number; // 1-5
+    userPriorities?: string[]; // From UserProfile.priorities
+    targetTitle?: string;     // User's target position
+    currentTitle?: string;    // User's current position
+  }
+) {
   const aiConfig = await getConfigForPurpose("text");
 
   if (!aiConfig.apiKey) {
@@ -49,9 +77,44 @@ export async function analyzeNotes(notes: string, position?: string) {
     timeout: 120000,
   });
 
+  // Build context hint for prompt
+  let contextHint = "";
+  if (context) {
+    if (context.result) {
+      contextHint += `\n本次面试结果：${context.result}`;
+      if (context.result !== '被拒') {
+        contextHint += '\n注意：由于面试结果不是"被拒"，rejectionReason 必须为 null';
+      } else {
+        contextHint += '\n请重点分析 rejectionReason';
+      }
+    }
+    if (context.rounds) {
+      contextHint += `\n面试轮次：第${context.rounds}轮`;
+    }
+    if (context.interviewMode) {
+      contextHint += `\n面试方式：${context.interviewMode}`;
+    }
+    if (context.currentTitle && context.targetTitle) {
+      contextHint += `\n用户当前职位：${context.currentTitle}，目标职位：${context.targetTitle}`;
+    }
+    if (context.userPriorities && context.userPriorities.length > 0) {
+      contextHint += `\n用户求职偏好（按优先级排序）：${context.userPriorities.join('、')}`;
+    }
+  }
+
+  // Adjust parameters based on notes length
+  const notesLength = notes.length;
+  let temperature = 0.3;
+  let maxTokens = 800;
+  if (notesLength < 50) {
+    temperature = 0.2;
+    maxTokens = 600;
+    contextHint += `\n注意：这是一条简短的面试记录（${notesLength}字），信息有限。请基于已有信息给出分析，对不确定的字段标注低置信度。`;
+  }
+
   const userPrompt = position
-    ? `面试岗位：${position}\n\n面试备注：\n${notes}`
-    : `面试备注：\n${notes}`;
+    ? `面试岗位：${position}${contextHint}\n\n面试备注：\n${notes}`
+    : `面试备注：\n${notes}${contextHint}`;
 
   try {
     const completion = await openai.chat.completions.create(
@@ -62,8 +125,8 @@ export async function analyzeNotes(notes: string, position?: string) {
           { role: "user", content: FEW_SHOT_EXAMPLE },
           { role: "user", content: userPrompt },
         ],
-        temperature: 0.3,
-        max_tokens: 800,
+        temperature,
+        max_tokens: maxTokens,
       },
       { maxRetries: 0, timeout: 120000 }
     );
@@ -87,6 +150,11 @@ export async function analyzeNotes(notes: string, position?: string) {
         }
       }
 
+      // Post-process: only include rejectionReason when result indicates rejection
+      if (context?.result && context.result !== '被拒') {
+        parsed.rejectionReason = null;
+      }
+
       return {
         tags: {
           interviewerStyle: parsed.interviewerStyle || null,
@@ -98,13 +166,14 @@ export async function analyzeNotes(notes: string, position?: string) {
           salarySignal: parsed.salarySignal || null,
           commuteAssessment: parsed.commuteAssessment || null,
           rejectionReason: parsed.rejectionReason || null,
-          rejectionControllability: parsed.rejectionControllability || null,
         } as AITags,
         insights: {
           summary: parsed.summary || "",
           keyFindings: parsed.keyFindings || [],
           improvementSuggestions: parsed.improvementSuggestions || [],
           prepFocus: parsed.prepFocus || [],
+          confidence: parsed.confidence || 50,
+          dataQuality: parsed.dataQuality || 'medium',
         } as AIInsights,
         questions: parsed.questions || [],
       };
@@ -133,13 +202,14 @@ function getDefaultResult() {
       salarySignal: null,
       commuteAssessment: null,
       rejectionReason: null,
-      rejectionControllability: null,
     } as AITags,
     insights: {
       summary: "AI 分析暂不可用",
       keyFindings: [],
       improvementSuggestions: [],
       prepFocus: [],
+      confidence: 0,
+      dataQuality: 'low',
     } as AIInsights,
     questions: [],
   };

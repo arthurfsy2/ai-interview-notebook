@@ -50,7 +50,12 @@ next-env.d.ts
 *.db-wal
 *.db-shm
 *.db.bak*
+*.db.backup.*
 prisma/prisma/
+
+# batch analysis scripts (contains personal data logic)
+scripts/batch-reanalyze*.js
+scripts/README.md
 
 # user uploaded files
 /public/uploads/*

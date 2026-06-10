@@ -20,7 +20,20 @@ export async function POST(
       return NextResponse.json({ error: "备注内容太少，无法分析" }, { status: 400 });
     }
 
-    const result = await analyzeNotes(interview.notes, interview.position);
+    // Fetch user profile for context
+    const profile = await prisma.userProfile.findUnique({ where: { userId: "local" } });
+
+    const context = {
+      result: interview.result,
+      interviewMode: interview.interviewMode,
+      rounds: interview.rounds,
+      experienceRating: interview.experienceRating,
+      userPriorities: profile?.priorities ? JSON.parse(profile.priorities) : [],
+      targetTitle: profile?.targetTitle,
+      currentTitle: profile?.currentTitle,
+    };
+
+    const result = await analyzeNotes(interview.notes, interview.position, context);
 
     await prisma.interview.update({
       where: { id },
