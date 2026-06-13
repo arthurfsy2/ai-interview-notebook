@@ -25,6 +25,7 @@ import { Footer } from "@/components/layout/Footer";
 import type { Interview } from "@/types";
 
 const RESULT_OPTIONS = [
+  { key: "待定", labelKey: "filterPending" },
   { key: "all", labelKey: "filterAll" },
   { key: "通过", labelKey: "filterPassed" },
   { key: "被拒", labelKey: "filterRejected" },
@@ -73,6 +74,16 @@ export default function InterviewsPage() {
 
   useEffect(() => {
     fetchInterviews();
+    // 静默检查并更新超过配置天数的"待定"记录
+    fetch("/api/interviews/auto-update-pending", { method: "POST" })
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.success && data.updatedCount > 0) {
+          // 有记录被更新，刷新列表
+          fetchInterviews();
+        }
+      })
+      .catch(() => {}); // 静默失败，不影响用户体验
   }, [filter]);
 
   const handleSearch = () => {

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { Plus, Trash2, Check, Loader2, Key, Globe, Wifi, Save, X } from "lucide-react";
+import { Plus, Trash2, Check, Loader2, Key, Globe, Wifi, Save, X, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,6 +73,8 @@ export default function SettingsPage() {
   const [webSearchHasKey, setWebSearchHasKey] = useState(false);
   const [webSearchTesting, setWebSearchTesting] = useState(false);
   const [webSearchTestResult, setWebSearchTestResult] = useState<{ success: boolean; message?: string; error?: string; debug?: any } | null>(null);
+  const [pendingExpireDays, setPendingExpireDays] = useState("14");
+  const [pendingExpireSaving, setPendingExpireSaving] = useState(false);
   const [form, setForm] = useState({
     provider: "dashscope",
     name: "",
@@ -105,6 +107,15 @@ export default function SettingsPage() {
           if (wsConfig?.hasApiKey) setWebSearchHasKey(true);
         }
       });
+    // Load pending auto-expire days
+    fetch("/api/settings/pending-expire")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success && d.days !== undefined) {
+          setPendingExpireDays(String(d.days));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // 切换 provider 时自动填 baseUrl 和 model
@@ -272,6 +283,22 @@ export default function SettingsPage() {
     } finally {
       setWebSearchTesting(false);
     }
+  };
+
+  const handleSavePendingExpire = async () => {
+    setPendingExpireSaving(true);
+    try {
+      const res = await fetch("/api/settings/pending-expire", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ days: parseInt(pendingExpireDays, 10) || 0 }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setPendingExpireDays(String(data.days));
+      }
+    } catch (e) {}
+    setPendingExpireSaving(false);
   };
 
   const handleTest = async () => {
@@ -627,6 +654,50 @@ export default function SettingsPage() {
                 )}
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Pending Auto-Expire */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <Clock className="h-5 w-5 text-amber-600" />
+              {t("pendingAutoExpire")}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-sm text-slate-500 mb-4">
+              {t("pendingAutoExpireDesc")}
+            </p>
+            <div className="flex items-end gap-3">
+              <div className="flex-1 max-w-[160px]">
+                <Label>{t("expireDays")}</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="365"
+                  value={pendingExpireDays}
+                  onChange={(e) => setPendingExpireDays(e.target.value)}
+                  placeholder="14"
+                />
+              </div>
+              <span className="text-sm text-slate-400 pb-2">{t("days")}</span>
+              <Button
+                size="sm"
+                onClick={handleSavePendingExpire}
+                disabled={pendingExpireSaving}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                {pendingExpireSaving ? (
+                  <><Loader2 className="h-4 w-4 mr-1 animate-spin" />{t("saving")}</>
+                ) : (
+                  <><Save className="h-4 w-4 mr-1" />{t("save")}</>
+                )}
+              </Button>
+            </div>
+            <p className="text-xs text-slate-400 mt-2">
+              {t("pendingAutoExpireHint")}
+            </p>
           </CardContent>
         </Card>
 

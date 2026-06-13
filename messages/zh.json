@@ -71,6 +71,7 @@
     "filterPassed": "通过",
     "filterRejected": "被拒",
     "filterNoResponse": "无消息",
+    "filterPending": "待定",
     "filterGood": "体验好",
     "filterBad": "体验差",
     "noRecords": "暂无面试记录",
@@ -179,7 +180,14 @@
     "exportAll": "导出全部数据 (xlsx)",
     "importFromExcel": "从 Excel 导入",
     "deleteAllData": "删除所有数据",
-    "confirmDeleteAll": "确定要删除所有数据吗？此操作不可撤销。"
+    "confirmDeleteAll": "确定要删除所有数据吗？此操作不可撤销。",
+    "pendingAutoExpire": "待定记录管理",
+    "pendingAutoExpireDesc": "超过设定天数仍为「待定」的面试记录，打开页面时自动更新为「无消息」。",
+    "expireDays": "过期天数",
+    "days": "天",
+    "pendingAutoExpireHint": "设为 0 表示禁用自动过期。",
+    "save": "保存",
+    "saving": "保存中..."
   },
   "Analytics": {
     "title": "分析面板",

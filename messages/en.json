@@ -71,6 +71,7 @@
     "filterPassed": "Passed",
     "filterRejected": "Rejected",
     "filterNoResponse": "No Response",
+    "filterPending": "Pending",
     "filterGood": "Good",
     "filterBad": "Bad",
     "noRecords": "No records",
@@ -179,7 +180,14 @@
     "exportAll": "Export All (xlsx)",
     "importFromExcel": "Import from Excel",
     "deleteAllData": "Delete All Data",
-    "confirmDeleteAll": "Delete ALL data?"
+    "confirmDeleteAll": "Delete ALL data?",
+    "pendingAutoExpire": "Pending Auto-Expire",
+    "pendingAutoExpireDesc": "Automatically update 'Pending' records older than the configured days to 'No Response' when you open the page.",
+    "expireDays": "Expire After",
+    "days": "days",
+    "pendingAutoExpireHint": "Set to 0 to disable auto-expire.",
+    "save": "Save",
+    "saving": "Saving..."
   },
   "Analytics": {
     "title": "Analytics",
