@@ -20,6 +20,25 @@
   --input: #e2e8f0;
   --ring: #2563eb;
   --radius: 1rem;
+
+  /* 语义化颜色：面试结果 */
+  --interview-pass: #22c55e;      /* 通过 */
+  --interview-reject: #ef4444;    /* 被拒 */
+  --interview-pending: #f59e0b;   /* 待定 */
+  --interview-abandon: #6b7280;   /* 主动放弃 */
+  --interview-no-response: #3b82f6; /* 无消息 */
+
+  /* 语义化颜色：评分 */
+  --rating-excellent: #22c55e;    /* 5星 */
+  --rating-good: #3b82f6;         /* 4星 */
+  --rating-normal: #f59e0b;       /* 3星 */
+  --rating-poor: #ef4444;         /* 1-2星 */
+
+  /* 语义化颜色：状态 */
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-destructive: #ef4444;
+  --color-info: #3b82f6;
 }
 
 @theme inline {
@@ -33,6 +52,26 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+
+  /* 语义化颜色映射 */
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-destructive: var(--color-destructive);
+  --color-info: var(--color-info);
+
+  /* 面试结果颜色 */
+  --color-interview-pass: var(--interview-pass);
+  --color-interview-reject: var(--interview-reject);
+  --color-interview-pending: var(--interview-pending);
+  --color-interview-abandon: var(--interview-abandon);
+  --color-interview-no-response: var(--interview-no-response);
+
+  /* 评分颜色 */
+  --color-rating-excellent: var(--rating-excellent);
+  --color-rating-good: var(--rating-good);
+  --color-rating-normal: var(--rating-normal);
+  --color-rating-poor: var(--rating-poor);
+
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --radius-lg: var(--radius);
@@ -59,6 +98,25 @@
     --border: #334155;
     --input: #334155;
     --ring: #3b82f6;
+
+    /* 语义化颜色：面试结果（暗色模式） */
+    --interview-pass: #4ade80;
+    --interview-reject: #f87171;
+    --interview-pending: #fbbf24;
+    --interview-abandon: #9ca3af;
+    --interview-no-response: #60a5fa;
+
+    /* 语义化颜色：评分（暗色模式） */
+    --rating-excellent: #4ade80;
+    --rating-good: #60a5fa;
+    --rating-normal: #fbbf24;
+    --rating-poor: #f87171;
+
+    /* 语义化颜色：状态（暗色模式） */
+    --color-success: #4ade80;
+    --color-warning: #fbbf24;
+    --color-destructive: #f87171;
+    --color-info: #60a5fa;
   }
 }
 
@@ -96,4 +154,191 @@ body {
     0 2px 4px rgba(0, 0, 0, 0.08),
     0 8px 20px rgba(0, 0, 0, 0.1);
   transform: translateY(-1px);
+}
+
+/* 品牌特色样式：温暖阴影 */
+.shadow-warm {
+  box-shadow: 0 4px 24px -4px rgba(37, 99, 235, 0.08), 0 2px 8px -2px rgba(0, 0, 0, 0.04);
+}
+
+.shadow-warm-lg {
+  box-shadow: 0 8px 32px -8px rgba(37, 99, 235, 0.12), 0 4px 16px -4px rgba(0, 0, 0, 0.06);
+}
+
+/* 品牌特色样式：微妙的 hover 效果 */
+.hover-bounce {
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.hover-bounce:hover {
+  transform: scale(1.02);
+}
+
+/* 品牌特色样式：渐变背景 */
+.bg-hero-gradient {
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 50%, #bfdbfe 100%);
+}
+
+.bg-hero-gradient-dark {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+}
+
+/* 品牌特色样式：标题样式 */
+h1, h2, h3 {
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* 品牌特色样式：动画淡入 */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.6s ease-out forwards;
+}
+
+/* 隐藏滚动条 */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* 品牌特色样式：卡片悬浮效果 */
+.hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+/* 品牌特色样式：边框渐变 */
+.border-gradient {
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  position: relative;
+}
+.border-gradient::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  z-index: -1;
+}
+
+/* 品牌特色样式：文字渐变 */
+.text-gradient {
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* 品牌特色样式：脉冲动画 */
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
+}
+
+/* 品牌特色样式：滑入动画 */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slide-in-up {
+  animation: slideInUp 0.4s ease-out forwards;
+}
+
+/* 品牌特色样式：淡入动画 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* 品牌特色样式：缩放动画 */
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out forwards;
+}
+
+/* 品牌特色样式：骨架屏动画 */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--muted) 25%, var(--muted-foreground)/10 50%, var(--muted) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+/* 品牌特色样式：分割线 */
+.divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border), transparent);
+}
+
+/* 品牌特色样式：玻璃态效果 */
+.glass {
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+@media (prefers-color-scheme: dark) {
+  .glass {
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
 }

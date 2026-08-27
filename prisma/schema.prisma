@@ -33,6 +33,9 @@ model Interview {
   @@index([userId])
   @@index([companyName])
   @@index([result])
+  @@index([interviewDate])
+  @@index([result, interviewDate])
+  @@index([companyName, position])
   @@map("interviews")
 }
 
@@ -54,6 +57,8 @@ model PreInterviewAnalysis {
   createdAt         DateTime @default(now())
 
   @@index([userId])
+  @@index([createdAt])
+  @@index([verdict, score])
   @@map("pre_interview_analyses")
 }
 
@@ -66,6 +71,8 @@ model PatternAnalysis {
   updatedAt       DateTime @updatedAt
 
   @@index([userId])
+  @@index([createdAt])
+  @@index([interviewCount])
   @@map("pattern_analyses")
 }
 
@@ -86,6 +93,8 @@ model UserProfile {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 
+  @@index([currentTitle])
+  @@index([targetTitle])
   @@map("user_profiles")
 }
 

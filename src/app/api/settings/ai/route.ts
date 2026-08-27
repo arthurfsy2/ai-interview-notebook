@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { decryptSafe, encrypt } from "@/lib/crypto";
+import { clearAIConfigCache } from "@/lib/ai/config";
 
 // GET: 获取所有 AI 配置
 export async function GET() {
@@ -62,6 +63,9 @@ export async function POST(req: NextRequest) {
         });
       }
 
+      // 清除缓存
+      clearAIConfigCache();
+
       return NextResponse.json({ success: true, configs });
     }
 
@@ -102,6 +106,9 @@ export async function POST(req: NextRequest) {
       });
     }
 
+    // 清除缓存
+    clearAIConfigCache();
+
     return NextResponse.json({ success: true, configs });
   } catch (error) {
     console.error("[settings/ai] POST error:", error);
@@ -119,6 +126,9 @@ export async function PATCH(req: NextRequest) {
       update: { value: activeId },
       create: { key: "ai_active_config", value: activeId },
     });
+
+    // 清除缓存
+    clearAIConfigCache();
 
     return NextResponse.json({ success: true, activeId });
   } catch (error) {
