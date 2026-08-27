@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { parseBossJD } from "@/lib/parsers/boss";
+import { parseLiepinJD } from "@/lib/parsers/liepin";
 
 export default function NewPreInterviewPage() {
   const t = useTranslations("PreInterview");
@@ -37,9 +38,11 @@ export default function NewPreInterviewPage() {
 
   const handleJdChange = (text: string) => {
     setForm({ ...form, jdRawText: text });
-    // Auto-detect BOSS format
-    const parsed_ = parseBossJD(text);
-    if (parsed_.detected) {
+    // Auto-detect BOSS or Liepin format
+    const bossParsed = parseBossJD(text);
+    const liepinParsed = parseLiepinJD(text);
+    const parsed_ = bossParsed.detected ? bossParsed : liepinParsed.detected ? liepinParsed : null;
+    if (parsed_?.detected) {
       setParsed(parsed_);
       setForm({
         ...form,
@@ -68,9 +71,9 @@ export default function NewPreInterviewPage() {
     setStep("searching");
 
     try {
-      // Use cleaned JD text if BOSS format detected
+      // Use cleaned JD text if BOSS/Liepin format detected
       const jdToAnalyze = parsed?.detected && parsed?.jdText
-        ? `岗位：${form.position}\n公司：${form.companyName}\n薪资：${parsed.salary}\n城市：${parsed.location}\n经验：${parsed.experience}\n学历：${parsed.education}\n状态：${parsed.listingStatus} ${parsed.companySize} ${parsed.industry}\n福利：${parsed.benefits.join("、")}\n${parsed.workAddress ? `工作地址：${parsed.workAddress}\n` : ""}\n职位描述：\n${parsed.jdText}\n\n公司介绍：\n${parsed.companyIntro}`
+        ? `岗位：${form.position}\n公司：${form.companyName}\n薪资：${parsed.salary}\n城市：${parsed.location}\n经验：${parsed.experience}\n学历：${parsed.education}\n状态：${parsed.listingStatus || ""} ${parsed.companySize || ""} ${parsed.industry || ""}\n${parsed.benefits?.length ? `福利：${parsed.benefits.join("、")}\n` : ""}${parsed.workAddress ? `工作地址：${parsed.workAddress}\n` : ""}\n职位描述：\n${parsed.jdText}\n\n公司介绍：\n${parsed.companyIntro}`
         : form.jdRawText;
 
       const res = await fetch("/api/pre-interview/analyze", {
@@ -80,6 +83,7 @@ export default function NewPreInterviewPage() {
           companyName: form.companyName,
           position: form.position,
           jdRawText: jdToAnalyze,
+          workAddress: parsed?.workAddress || null,
           workSchedule: form.workSchedule !== "未提及" ? form.workSchedule : null,
           // 传递 BOSS 显示名用于二次搜索
           ...(parsed?.companyDisplayName && parsed.companyDisplayName !== form.companyName
@@ -167,7 +171,7 @@ export default function NewPreInterviewPage() {
                 <span>{t("pasteJD")} *</span>
                 {parsed?.detected && (
                   <Badge className="bg-emerald-100 text-emerald-700 text-xs">
-                    <CheckCircle2 className="h-3 w-3 mr-1" />BOSS直聘 已识别
+                    <CheckCircle2 className="h-3 w-3 mr-1" />{parsed.benefits ? "BOSS直聘" : "猎聘"} 已识别
                   </Badge>
                 )}
               </Label>
@@ -185,8 +189,9 @@ export default function NewPreInterviewPage() {
                   {parsed.position && <p>💼 岗位：{parsed.position}</p>}
                   {parsed.salary && <p>💰 薪资：{parsed.salary}</p>}
                   {parsed.location && <p>📍 城市：{parsed.location} {parsed.experience && `· ${parsed.experience}`} {parsed.education && `· ${parsed.education}`}</p>}
+                  {parsed.workAddress && <p>🏢 工作地址：{parsed.workAddress}</p>}
                   {parsed.listingStatus && <p>📊 状态：{parsed.listingStatus} {parsed.companySize && `· ${parsed.companySize}`} {parsed.industry && `· ${parsed.industry}`}</p>}
-                  {parsed.benefits.length > 0 && <p>🎁 福利：{parsed.benefits.join("、")}</p>}
+                  {parsed.benefits?.length > 0 && <p>🎁 福利：{parsed.benefits.join("、")}</p>}
                   {parsed.jdText && <p className="text-slate-400">📝 JD正文已提取（{parsed.jdText.length}字）</p>}
                 </div>
               )}

@@ -16,8 +16,11 @@ export async function POST(
       return NextResponse.json({ error: "记录不存在" }, { status: 404 });
     }
 
-    if (!interview.notes || interview.notes.trim().length < 5) {
-      return NextResponse.json({ error: "备注内容太少，无法分析" }, { status: 400 });
+    const hasNotes = interview.notes && interview.notes.trim().length >= 5;
+    const hasSummary = interview.aiMeetingSummary && interview.aiMeetingSummary.trim().length >= 5;
+
+    if (!hasNotes && !hasSummary) {
+      return NextResponse.json({ error: "备注或会议摘要内容太少，无法分析" }, { status: 400 });
     }
 
     // Fetch user profile for context
@@ -33,7 +36,12 @@ export async function POST(
       currentTitle: profile?.currentTitle,
     };
 
-    const result = await analyzeNotes(interview.notes, interview.position, context);
+    const result = await analyzeNotes(
+      interview.notes || "",
+      interview.position,
+      context,
+      interview.aiMeetingSummary || undefined
+    );
 
     await prisma.interview.update({
       where: { id },

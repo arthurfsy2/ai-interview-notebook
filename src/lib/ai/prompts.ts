@@ -52,7 +52,8 @@ export async function analyzeNotes(
     userPriorities?: string[]; // From UserProfile.priorities
     targetTitle?: string;     // User's target position
     currentTitle?: string;    // User's current position
-  }
+  },
+  aiMeetingSummary?: string   // AI 会议摘要（如腾讯会议 AI 总结）
 ) {
   const aiConfig = await getConfigForPurpose("text");
 
@@ -104,17 +105,28 @@ export async function analyzeNotes(
 
   // Adjust parameters based on notes length
   const notesLength = notes.length;
+  const summaryLength = aiMeetingSummary?.length || 0;
+  const totalContentLength = notesLength + summaryLength;
   let temperature = 0.3;
   let maxTokens = 800;
-  if (notesLength < 50) {
+  if (totalContentLength < 50) {
     temperature = 0.2;
     maxTokens = 600;
-    contextHint += `\n注意：这是一条简短的面试记录（${notesLength}字），信息有限。请基于已有信息给出分析，对不确定的字段标注低置信度。`;
+    contextHint += `\n注意：这是一条简短的面试记录（${totalContentLength}字），信息有限。请基于已有信息给出分析，对不确定的字段标注低置信度。`;
   }
 
-  const userPrompt = position
-    ? `面试岗位：${position}${contextHint}\n\n面试备注：\n${notes}`
-    : `面试备注：\n${notes}${contextHint}`;
+  // Build user prompt with optional meeting summary
+  let userPrompt = position ? `面试岗位：${position}${contextHint}` : `${contextHint}`;
+
+  if (aiMeetingSummary && aiMeetingSummary.trim()) {
+    userPrompt += `\n\n=== AI 会议摘要 ===\n${aiMeetingSummary}`;
+  }
+  if (notes && notes.trim()) {
+    userPrompt += `\n\n=== 面试笔记 ===\n${notes}`;
+  } else if (!aiMeetingSummary || !aiMeetingSummary.trim()) {
+    // Fallback: if neither exists, this shouldn't happen due to API validation
+    userPrompt += `\n\n面试备注：\n${notes}`;
+  }
 
   try {
     const completion = await openai.chat.completions.create(

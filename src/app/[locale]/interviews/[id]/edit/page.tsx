@@ -43,6 +43,7 @@ export default function EditInterviewPage() {
     commuteTime: "",
     workSchedule: "双休",
     notes: "",
+    aiMeetingSummary: "",
   });
 
   useEffect(() => {
@@ -63,6 +64,7 @@ export default function EditInterviewPage() {
             commuteTime: item.commuteTime || "",
             workSchedule: item.workSchedule || "双休",
             notes: item.notes || "",
+            aiMeetingSummary: item.aiMeetingSummary || "",
           });
         }
         setLoading(false);
@@ -221,6 +223,17 @@ export default function EditInterviewPage() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div>
+              <Label>AI 会议摘要</Label>
+              <p className="text-xs text-slate-400 mb-1.5">粘贴腾讯会议等平台的 AI 生成摘要，将用于 AI 分析</p>
+              <Textarea
+                className="min-h-[120px]"
+                placeholder={"粘贴会议 AI 摘要..."}
+                value={form.aiMeetingSummary}
+                onChange={(e) => setForm({ ...form, aiMeetingSummary: e.target.value })}
+              />
             </div>
 
             <div>

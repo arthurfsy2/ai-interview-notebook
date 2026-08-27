@@ -119,16 +119,34 @@ export async function getConfigForPurpose(purpose: 'ocr' | 'text'): Promise<AICo
   const defaultConfig = await getAIConfigFromDB();
 
   try {
-    const configsSetting = await prisma.settings.findUnique({ where: { key: 'ai_configs' } });
+    const [configsSetting, activeSetting] = await Promise.all([
+      prisma.settings.findUnique({ where: { key: 'ai_configs' } }),
+      prisma.settings.findUnique({ where: { key: 'ai_active_config' } }),
+    ]);
     if (!configsSetting?.value) return defaultConfig;
 
     const configs: AIConfigWithMeta[] = JSON.parse(configsSetting.value);
+    const activeId = activeSetting?.value;
 
-    // 过滤掉 websearch 配置（它只用于搜索，不是 AI 模型配置）
-    const aiOnly = (c: AIConfigWithMeta) => c.provider !== 'websearch';
+    // 过滤掉 websearch/amap 等非 AI 模型配置
+    const aiOnly = (c: AIConfigWithMeta) => c.provider !== 'websearch' && c.provider !== 'amap';
+    // 激活的配置视为已启用
+    const isEnabled = (c: AIConfigWithMeta) => c.apiKey && (c.enabled !== false || c.id === activeId);
 
-    // 1. 找启用的专用配置（useFor === purpose）
-    const dedicated = configs.find(c => aiOnly(c) && c.useFor === purpose && c.apiKey && c.enabled !== false);
+    // 1. 优先选激活的配置（无论 useFor）
+    const activeConfig = configs.find(c => aiOnly(c) && c.id === activeId && isEnabled(c));
+    if (activeConfig) {
+      return {
+        apiKey: decryptSafe(activeConfig.apiKey),
+        baseUrl: activeConfig.baseUrl,
+        model: activeConfig.model,
+        provider: activeConfig.provider,
+        proxy: activeConfig.proxy || undefined,
+      };
+    }
+
+    // 2. 找启用的专用配置（useFor === purpose）
+    const dedicated = configs.find(c => aiOnly(c) && c.useFor === purpose && isEnabled(c));
     if (dedicated) {
       return {
         apiKey: decryptSafe(dedicated.apiKey),
@@ -139,8 +157,8 @@ export async function getConfigForPurpose(purpose: 'ocr' | 'text'): Promise<AICo
       };
     }
 
-    // 2. 找启用的通用配置（useFor === 'all' 或未设置）
-    const general = configs.find(c => aiOnly(c) && (c.useFor === 'all' || !c.useFor) && c.apiKey && c.enabled !== false);
+    // 3. 找启用的通用配置（useFor === 'all' 或未设置）
+    const general = configs.find(c => aiOnly(c) && (c.useFor === 'all' || !c.useFor) && isEnabled(c));
     if (general) {
       return {
         apiKey: decryptSafe(general.apiKey),
@@ -164,19 +182,24 @@ export async function getConfigForPurpose(purpose: 'ocr' | 'text'): Promise<AICo
  */
 export async function isFreeTier(purpose: 'ocr' | 'text'): Promise<boolean> {
   try {
-    const configsSetting = await prisma.settings.findUnique({ where: { key: 'ai_configs' } });
+    const [configsSetting, activeSetting] = await Promise.all([
+      prisma.settings.findUnique({ where: { key: 'ai_configs' } }),
+      prisma.settings.findUnique({ where: { key: 'ai_active_config' } }),
+    ]);
     if (!configsSetting?.value) return true;
 
     const configs: AIConfigWithMeta[] = JSON.parse(configsSetting.value);
+    const activeId = activeSetting?.value;
 
-    const aiOnly = (c: AIConfigWithMeta) => c.provider !== 'websearch';
+    const aiOnly = (c: AIConfigWithMeta) => c.provider !== 'websearch' && c.provider !== 'amap';
+    const isEnabled = (c: AIConfigWithMeta) => c.apiKey && (c.enabled !== false || c.id === activeId);
 
     // 找启用的专用配置
-    const dedicated = configs.find(c => aiOnly(c) && c.useFor === purpose && c.apiKey && c.enabled !== false);
+    const dedicated = configs.find(c => aiOnly(c) && c.useFor === purpose && isEnabled(c));
     if (dedicated) return dedicated.tier !== 'paid';
 
     // 找启用的通用配置
-    const general = configs.find(c => aiOnly(c) && (c.useFor === 'all' || !c.useFor) && c.apiKey && c.enabled !== false);
+    const general = configs.find(c => aiOnly(c) && (c.useFor === 'all' || !c.useFor) && isEnabled(c));
     if (general) return general.tier !== 'paid';
 
     return true;

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { Plus, Trash2, Check, Loader2, Key, Globe, Wifi, Save, X, Clock } from "lucide-react";
+import { Plus, Trash2, Check, Loader2, Key, Globe, Wifi, Save, X, Clock, MapPin } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,6 +73,12 @@ export default function SettingsPage() {
   const [webSearchHasKey, setWebSearchHasKey] = useState(false);
   const [webSearchTesting, setWebSearchTesting] = useState(false);
   const [webSearchTestResult, setWebSearchTestResult] = useState<{ success: boolean; message?: string; error?: string; debug?: any } | null>(null);
+  const [amapKey, setAmapKey] = useState("");
+  const [amapSaving, setAmapSaving] = useState(false);
+  const [amapSaved, setAmapSaved] = useState(false);
+  const [amapHasKey, setAmapHasKey] = useState(false);
+  const [amapTesting, setAmapTesting] = useState(false);
+  const [amapTestResult, setAmapTestResult] = useState<{ success: boolean; message?: string; error?: string; debug?: any } | null>(null);
   const [pendingExpireDays, setPendingExpireDays] = useState("14");
   const [pendingExpireSaving, setPendingExpireSaving] = useState(false);
   const [form, setForm] = useState({
@@ -105,6 +111,8 @@ export default function SettingsPage() {
         if (d.success) {
           const wsConfig = (d.configs || []).find((c: any) => c.id === "websearch");
           if (wsConfig?.hasApiKey) setWebSearchHasKey(true);
+          const amapConfig = (d.configs || []).find((c: any) => c.id === "amap");
+          if (amapConfig?.hasApiKey) setAmapHasKey(true);
         }
       });
     // Load pending auto-expire days
@@ -282,6 +290,52 @@ export default function SettingsPage() {
       setWebSearchTestResult({ success: false, error: "连接失败，请检查网络" });
     } finally {
       setWebSearchTesting(false);
+    }
+  };
+
+  const handleSaveAmap = async () => {
+    if (!amapKey.trim()) return;
+    setAmapSaving(true);
+    try {
+      await fetch("/api/settings/ai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: "amap",
+          provider: "amap",
+          name: "高德地图",
+          apiKey: amapKey,
+          baseUrl: "",
+          model: "",
+          useFor: "text",
+          enabled: true,
+        }),
+      });
+      setAmapKey("");
+      setAmapHasKey(true);
+      setAmapSaved(true);
+      setTimeout(() => setAmapSaved(false), 3000);
+    } catch (e) {}
+    setAmapSaving(false);
+  };
+
+  const handleTestAmap = async () => {
+    setAmapTesting(true);
+    setAmapTestResult(null);
+    try {
+      const res = await fetch("/api/settings/amap/test", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          apiKey: amapKey || undefined,
+        }),
+      });
+      const data = await res.json();
+      setAmapTestResult(data);
+    } catch {
+      setAmapTestResult({ success: false, error: "连接失败，请检查网络" });
+    } finally {
+      setAmapTesting(false);
     }
   };
 
@@ -648,6 +702,87 @@ export default function SettingsPage() {
                       <div className="text-slate-500 mt-1 space-y-0.5">
                         <div>🔗 {webSearchTestResult.debug.requestUrl}</div>
                         <div>🏷 {webSearchTestResult.debug.provider}</div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Amap Config */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle className="text-lg flex items-center gap-2">
+              <MapPin className="h-5 w-5 text-blue-600" />
+              高德地图
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div>
+                <Label>API Key</Label>
+                <p className="text-xs text-slate-400 mb-2">
+                  用于地址逆地理编码和驾车距离计算，需
+                  <a href="https://console.amap.com/dev/key/app" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">高德开放平台</a>
+                  Web服务类型 Key
+                </p>
+                {amapHasKey && !amapKey && (
+                  <p className="text-xs text-emerald-600 font-medium mb-1">✅ 已配置 API Key</p>
+                )}
+                <div className="flex gap-2">
+                  <Input
+                    type="password"
+                    placeholder={amapHasKey ? "留空保留原 Key，或输入新 Key" : "高德 Web 服务 Key"}
+                    value={amapKey}
+                    onChange={(e) => setAmapKey(e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={handleSaveAmap}
+                    disabled={amapSaving || !amapKey.trim()}
+                    className="bg-blue-600 hover:bg-blue-700"
+                  >
+                    {amapSaving ? (
+                      <><Loader2 className="h-4 w-4 mr-1 animate-spin" />保存中</>
+                    ) : amapSaved ? (
+                      <><Check className="h-4 w-4 mr-1" />已保存</>
+                    ) : (
+                      <><Save className="h-4 w-4 mr-1" />保存</>
+                    )}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleTestAmap}
+                    disabled={amapTesting}
+                    className="border-blue-200 text-blue-700 hover:bg-blue-50"
+                  >
+                    {amapTesting ? (
+                      <><Loader2 className="h-4 w-4 mr-1 animate-spin" />测试中</>
+                    ) : (
+                      <><Wifi className="h-4 w-4 mr-1" />测试</>
+                    )}
+                  </Button>
+                </div>
+
+                {/* Amap test result */}
+                {amapTestResult && (
+                  <div className={`text-xs p-2.5 rounded-lg mt-2 ${
+                    amapTestResult.success
+                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                      : "bg-red-50 text-red-700 border border-red-200"
+                  }`}>
+                    <div className="font-medium">
+                      {amapTestResult.success
+                        ? `✅ ${amapTestResult.message || "连接成功"}`
+                        : `❌ 连接失败：${amapTestResult.error || ""}`}
+                    </div>
+                    {amapTestResult.debug && (
+                      <div className="text-slate-500 mt-1 space-y-0.5">
+                        <div>🔗 {amapTestResult.debug.provider}</div>
                       </div>
                     )}
                   </div>

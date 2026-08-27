@@ -59,6 +59,7 @@ export async function POST(req: NextRequest) {
         commuteTime: body.commuteTime || null,
         workSchedule: body.workSchedule || null,
         notes: body.notes || "",
+        aiMeetingSummary: body.aiMeetingSummary || null,
       },
     });
 

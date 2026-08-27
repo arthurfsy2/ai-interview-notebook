@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Link } from "@/i18n/routing";
-import { Plus, FileSearch, ChevronRight, Trash2, Search, X, SlidersHorizontal } from "lucide-react";
+import { Plus, FileSearch, ChevronRight, Trash2, Search, X, SlidersHorizontal, MapPin } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -219,6 +219,11 @@ export default function PreInterviewListPage() {
                           )}
                         </div>
                         <p className="text-sm text-slate-500">{item.position}</p>
+                        {item.workAddress && (
+                          <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
+                            <MapPin className="h-3 w-3 flex-shrink-0" />{item.workAddress}
+                          </p>
+                        )}
                         <p className="text-xs text-slate-400 mt-1">
                           {new Date(item.createdAt).toLocaleDateString(locale)}
                         </p>

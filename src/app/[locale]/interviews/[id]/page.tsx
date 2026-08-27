@@ -167,7 +167,13 @@ export default function InterviewDetailPage() {
                   <h2 className="text-xl font-bold text-slate-900">{interview.companyName}</h2>
                   <Badge className={getResultBadge(interview.result)}>{interview.result}</Badge>
                 </div>
-                <p className="text-base text-slate-600 mb-3">{interview.position}</p>
+                <p className="text-base text-slate-600 mb-1">{interview.position}</p>
+                {interview.preInterviewAnalysis?.workAddress && (
+                  <p className="text-xs text-slate-400 mb-3 flex items-center gap-1">
+                    <MapPin className="h-3 w-3" />{interview.preInterviewAnalysis.workAddress}
+                  </p>
+                )}
+                {!interview.preInterviewAnalysis?.workAddress && <div className="mb-3"></div>}
               </div>
               <div className="text-right text-sm">
                 <div className="text-slate-400 mb-1">
@@ -307,6 +313,23 @@ export default function InterviewDetailPage() {
           </Card>
         )}
 
+        {/* AI Meeting Summary */}
+        {interview.aiMeetingSummary && (
+          <Card className="mb-6 border-blue-200 bg-blue-50/30">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base flex items-center gap-2">
+                <FileSearch className="h-4 w-4 text-blue-500" />
+                AI 会议摘要
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-sm text-slate-700 whitespace-pre-wrap leading-relaxed">
+                {interview.aiMeetingSummary}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Linked Pre-Interview Analysis */}
         {interview.preInterviewAnalysis && (() => {
           const pa = interview.preInterviewAnalysis;
@@ -345,8 +368,8 @@ export default function InterviewDetailPage() {
           );
         })()}
 
-        {/* AI Analyze Button — always visible for re-analysis */}
-        {interview.notes && interview.notes.trim().length >= 5 && (
+        {/* AI Analyze Button — visible when notes or meeting summary exist */}
+        {((interview.notes && interview.notes.trim().length >= 5) || (interview.aiMeetingSummary && interview.aiMeetingSummary.trim().length >= 5)) && (
           <div className="text-center mb-6">
             <Button onClick={handleAnalyze} disabled={analyzing} className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white shadow-lg shadow-purple-500/25">
               {analyzing ? (

@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node scripts/check-port.js && next dev --port 3003",
+    "dev": "npx kill-port 3003 && next dev --port 3003",
+    "dev:clean": "npx kill-port 3003 && rm -rf .next && next dev --port 3003",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",

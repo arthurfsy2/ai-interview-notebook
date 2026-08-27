@@ -89,6 +89,7 @@ e2e-report/
 docs/
 
 # temp files
+tmp/
 tmp-*.ts
 tmp-*.js
 *.tmp

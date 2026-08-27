@@ -76,6 +76,7 @@ export default function NewInterviewPage() {
     commuteTime: "",
     workSchedule: "双休",
     notes: "",
+    aiMeetingSummary: "",
   });
 
   // Pre-fill from query params (from pre-interview link)
@@ -234,6 +235,18 @@ export default function NewInterviewPage() {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            {/* AI Meeting Summary */}
+            <div>
+              <Label>AI 会议摘要</Label>
+              <p className="text-xs text-slate-400 mb-1.5">粘贴腾讯会议等平台的 AI 生成摘要，将用于 AI 分析</p>
+              <Textarea
+                className="min-h-[120px]"
+                placeholder={"粘贴会议 AI 摘要，例如：\n本次面试为产品经理岗位，候选人介绍了自身经历...\n\n小结\n1. 候选人基本情况...\n\n待办\n1. 专病管理调研..."}
+                value={form.aiMeetingSummary}
+                onChange={(e) => setForm({ ...form, aiMeetingSummary: e.target.value })}
+              />
             </div>
 
             {/* Notes + Voice */}

@@ -21,6 +21,7 @@ model Interview {
   commuteTime     String?
   workSchedule    String?                   // '双休' | '大小周' | '单休' | '996'
   notes           String   @default("")     // Markdown notes
+  aiMeetingSummary String?                  // AI 会议摘要（如腾讯会议 AI 总结）
   aiTags          String?                   // JSON: AITags
   aiInsights      String?                   // JSON: AIInsights
   questions       String?                   // JSON: string[]
@@ -40,6 +41,9 @@ model PreInterviewAnalysis {
   userId            String   @default("local")
   companyName       String
   position          String
+  workAddress       String?  // 工作地址（从 BOSS JD 提取）
+  latitude          Float?   // 工作地址纬度（高德逆地理编码）
+  longitude         Float?   // 工作地址经度（高德逆地理编码）
   jdRawText         String
   analysisResult    String?  // JSON: full analysis result
   verdict           String?  // '建议去' | '可考虑' | '谨慎' | '不建议'
@@ -77,6 +81,8 @@ model UserProfile {
   location          String   @default("")
   priorities        String   @default("[]")
   residence         String   @default("{}")
+  latitude          Float?   // 家庭地址纬度（高德逆地理编码）
+  longitude         Float?   // 家庭地址经度（高德逆地理编码）
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
 

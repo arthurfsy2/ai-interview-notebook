@@ -44,6 +44,7 @@ export async function PUT(
         salaryRange: body.salaryRange,
         commuteTime: body.commuteTime,
         notes: body.notes,
+        aiMeetingSummary: body.aiMeetingSummary,
         aiTags: body.aiTags,
         aiInsights: body.aiInsights,
         questions: body.questions,

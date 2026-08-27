@@ -35,6 +35,7 @@ export interface Interview {
   commuteTime?: string;
   workSchedule?: string;
   notes: string;
+  aiMeetingSummary?: string;
   aiTags?: AITags;
   aiInsights?: AIInsights;
   questions?: string[];
@@ -124,6 +125,7 @@ export interface PreInterviewAnalysis {
   userId: string;
   companyName: string;
   position: string;
+  workAddress?: string;
   jdRawText: string;
   analysisResult?: PreInterviewAnalysisResult;
   verdict?: string;

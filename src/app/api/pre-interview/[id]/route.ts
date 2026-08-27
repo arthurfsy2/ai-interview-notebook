@@ -21,6 +21,7 @@ export async function GET(
       userId: analysis.userId,
       companyName: analysis.companyName,
       position: analysis.position,
+      workAddress: analysis.workAddress,
       jdRawText: analysis.jdRawText,
       analysisResult: analysis.analysisResult,
       verdict: analysis.verdict,

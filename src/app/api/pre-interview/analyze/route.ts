@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import OpenAI from "openai";
 import { getConfigForPurpose, normalizeAIUrl } from "@/lib/ai/config";
 import { decryptSafe } from "@/lib/crypto";
+import { geocode, getAmapKey, drivingDistance, formatDrivingResult } from "@/lib/amap";
 
 export const maxDuration = 180; // 3 minutes for multiple AI calls
 
@@ -282,7 +283,7 @@ function parseJsonResponse(responseText: string): any {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { companyName, position, jdRawText, analysisId, searchAltName, workSchedule: userWorkSchedule } = body;
+    const { companyName, position, jdRawText, workAddress: bodyWorkAddress, analysisId, searchAltName, workSchedule: userWorkSchedule } = body;
 
     if (!companyName || !jdRawText) {
       return NextResponse.json({ error: "公司名称和JD不能为空" }, { status: 400 });
@@ -296,14 +297,37 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "分析记录不存在" }, { status: 404 });
       }
     } else {
+      // Extract workAddress: prefer explicit parameter, fallback to regex from jdRawText
+      const workAddress = bodyWorkAddress || (() => {
+        const m = jdRawText.match(/工作地址[：:]\s*([^\n]+)/);
+        return m ? m[1].trim() : null;
+      })();
+
       analysis = await prisma.preInterviewAnalysis.create({
         data: {
           userId: "local",
           companyName,
           position: position || "",
+          workAddress: workAddress || null,
           jdRawText,
         },
       });
+
+      // Geocode work address if available
+      if (workAddress) {
+        const amapKey = await getAmapKey();
+        if (amapKey) {
+          const geo = await geocode(workAddress, amapKey);
+          if (geo) {
+            await prisma.preInterviewAnalysis.update({
+              where: { id: analysis.id },
+              data: { latitude: geo.lat, longitude: geo.lng },
+            });
+            analysis = { ...analysis, latitude: geo.lat, longitude: geo.lng } as any;
+            console.log("[pre-interview] Geocoded work address:", workAddress, "->", geo);
+          }
+        }
+      }
     }
 
     let analysisError: string | null = null;
@@ -510,6 +534,33 @@ export async function POST(req: NextRequest) {
           round3: round3Settled.status,
         },
       };
+
+      // Calculate driving distance if both coordinates available
+      try {
+        const workLat = (analysis as any).latitude;
+        const workLng = (analysis as any).longitude;
+        const profile = await prisma.userProfile.findUnique({ where: { userId: "local" } });
+        if (profile?.latitude && profile?.longitude && workLat && workLng) {
+          const amapKey = await getAmapKey();
+          if (amapKey) {
+            const driveResult = await drivingDistance(
+              { lat: profile.latitude, lng: profile.longitude },
+              { lat: workLat, lng: workLng },
+              amapKey
+            );
+            if (driveResult) {
+              enriched.commuteInfo = {
+                distance: driveResult.distance,
+                duration: driveResult.duration,
+                formatted: formatDrivingResult(driveResult),
+              };
+              console.log("[pre-interview] Driving distance:", enriched.commuteInfo.formatted);
+            }
+          }
+        }
+      } catch (e) {
+        console.error("[pre-interview] Driving distance error:", e);
+      }
 
       await prisma.preInterviewAnalysis.update({
         where: { id: analysis.id },

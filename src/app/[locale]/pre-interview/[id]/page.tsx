@@ -20,6 +20,8 @@ import {
   ChevronDown,
   ChevronUp,
   Search,
+  MapPin,
+  Car,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -176,7 +178,19 @@ export default function PreInterviewDetailPage() {
         <Card className="mb-6 border-2 border-blue-200">
           <CardContent className="p-5 text-center">
             <h2 className="text-xl font-bold text-slate-900 mb-1">{analysis.companyName}</h2>
-            <p className="text-slate-500 mb-4">{analysis.position}</p>
+            <p className="text-slate-500 mb-1">{analysis.position}</p>
+            {analysis.workAddress && (
+              <p className="text-xs text-slate-400 mb-1 flex items-center justify-center gap-1">
+                <MapPin className="h-3 w-3" />{analysis.workAddress}
+              </p>
+            )}
+            {report?.commuteInfo && (
+              <p className="text-xs text-blue-500 mb-4 flex items-center justify-center gap-1">
+                <Car className="h-3 w-3" />🚗 {report.commuteInfo.formatted}
+              </p>
+            )}
+            {!analysis.workAddress && !report?.commuteInfo && <div className="mb-4"></div>}
+            {!report?.commuteInfo && analysis.workAddress && <div className="mb-4"></div>}
             {analysis.verdict && (
               <Badge className={`text-lg px-4 py-1.5 ${verdictColors[analysis.verdict] || ""}`}>
                 {analysis.verdict}

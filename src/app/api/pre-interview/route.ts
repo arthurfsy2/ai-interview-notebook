@@ -62,6 +62,7 @@ export async function POST(req: NextRequest) {
         userId: "local",
         companyName: body.companyName,
         position: body.position,
+        workAddress: body.workAddress || null,
         jdRawText: body.jdRawText,
       },
     });
