@@ -10,6 +10,7 @@ import {
   Languages,
   Menu,
   X,
+  Map,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useState, useRef, useEffect } from "react";
@@ -24,6 +25,7 @@ export function Header() {
   const navItems = [
     { name: t("preInterview"), href: "/pre-interview", icon: FileSearch },
     { name: t("interviews"), href: "/interviews", icon: FileText },
+    { name: "面试地图", href: "/map", icon: Map },
     { name: t("analytics"), href: "/analytics", icon: BarChart3 },
   ];
 
