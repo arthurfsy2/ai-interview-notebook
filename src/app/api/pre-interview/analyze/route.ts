@@ -169,12 +169,15 @@ ${companyBackground ? `\n公司背景信息（来自搜索引擎）：\n${compan
         { role: "user", content: prompt },
       ],
       temperature: 0.3,
-      max_tokens: 800,
+      max_tokens: 2000,
     },
     { maxRetries: 0, timeout: 120000 }
   );
 
-  return parseJsonResponse(completion.choices[0]?.message?.content || "");
+  const message = completion.choices[0]?.message;
+  // mimo 等模型可能把内容放在 reasoning_content 而非 content
+  const responseText = message?.content || (message as any)?.reasoning_content || "";
+  return parseJsonResponse(responseText);
 }
 
 // Round 2: Personalized Assessment (resumeMatch, careerAssessment, decision)
@@ -219,12 +222,15 @@ ${prioritiesStr}
         { role: "user", content: prompt },
       ],
       temperature: 0.3,
-      max_tokens: 600,
+      max_tokens: 1500,
     },
     { maxRetries: 0, timeout: 120000 }
   );
 
-  return parseJsonResponse(completion.choices[0]?.message?.content || "");
+  const message = completion.choices[0]?.message;
+  // mimo 等模型可能把内容放在 reasoning_content 而非 content
+  const responseText = message?.content || (message as any)?.reasoning_content || "";
+  return parseJsonResponse(responseText);
 }
 
 // Round 3: Enriched Context (companyCulture, workIntensity) - Optional
@@ -253,12 +259,15 @@ ${companyBackground}
         { role: "user", content: prompt },
       ],
       temperature: 0.3,
-      max_tokens: 400,
+      max_tokens: 1000,
     },
     { maxRetries: 0, timeout: 120000 }
   );
 
-  return parseJsonResponse(completion.choices[0]?.message?.content || "");
+  const message = completion.choices[0]?.message;
+  // mimo 等模型可能把内容放在 reasoning_content 而非 content
+  const responseText = message?.content || (message as any)?.reasoning_content || "";
+  return parseJsonResponse(responseText);
 }
 
 function parseJsonResponse(responseText: string): any {
