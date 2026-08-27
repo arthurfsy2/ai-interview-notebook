@@ -198,7 +198,7 @@ ${companyBackground ? `\n公司背景信息（来自搜索引擎）：\n${compan
         { role: "user", content: prompt },
       ],
       temperature: 0.3,
-      max_tokens: 2000,
+      max_tokens: 8000,
     },
     { maxRetries: 0, timeout: 120000 }
   );
@@ -206,6 +206,8 @@ ${companyBackground ? `\n公司背景信息（来自搜索引擎）：\n${compan
   const message = completion.choices[0]?.message;
   // mimo 等模型可能把内容放在 reasoning_content 而非 content
   const responseText = message?.content || (message as any)?.reasoning_content || "";
+  console.log("[Round1] content length:", message?.content?.length || 0, "reasoning length:", (message as any)?.reasoning_content?.length || 0, "finish:", completion.choices[0]?.finish_reason);
+  if (!responseText) console.log("[Round1] WARNING: empty response from model");
   return parseJsonResponse(responseText);
 }
 
@@ -251,14 +253,13 @@ ${prioritiesStr}
         { role: "user", content: prompt },
       ],
       temperature: 0.3,
-      max_tokens: 1500,
+      max_tokens: 4000,
     },
     { maxRetries: 0, timeout: 120000 }
   );
 
   const message = completion.choices[0]?.message;
-  // mimo 等模型可能把内容放在 reasoning_content 而非 content
-  const responseText = message?.content || (message as any)?.reasoning_content || "";
+  const responseText = message?.content || "";
   return parseJsonResponse(responseText);
 }
 
@@ -288,14 +289,13 @@ ${companyBackground}
         { role: "user", content: prompt },
       ],
       temperature: 0.3,
-      max_tokens: 1000,
+      max_tokens: 3000,
     },
     { maxRetries: 0, timeout: 120000 }
   );
 
   const message = completion.choices[0]?.message;
-  // mimo 等模型可能把内容放在 reasoning_content 而非 content
-  const responseText = message?.content || (message as any)?.reasoning_content || "";
+  const responseText = message?.content || "";
   return parseJsonResponse(responseText);
 }
 
