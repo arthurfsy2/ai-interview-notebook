@@ -543,7 +543,7 @@ export default function PreInterviewDetailPage() {
                 <span className="flex items-center gap-2">
                   <Search className="h-4 w-4 text-emerald-600" />
                   搜索引擎原始数据
-                  <span className="text-[10px] font-normal text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded">Tavily</span>
+                  <span className="text-[10px] font-normal text-emerald-600 bg-emerald-100 px-1.5 py-0.5 rounded">{report._source?.searchProvider === "anysearch" ? "AnySearch" : report._source?.searchProvider === "exa" ? "Exa" : "Tavily"}</span>
                 </span>
                 {showSearchRaw ? <ChevronUp className="h-4 w-4 text-slate-400" /> : <ChevronDown className="h-4 w-4 text-slate-400" />}
               </CardTitle>

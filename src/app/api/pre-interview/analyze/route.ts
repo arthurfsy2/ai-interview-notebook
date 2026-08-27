@@ -401,10 +401,17 @@ export async function POST(req: NextRequest) {
 
       // Search company background
       let companyBackground = "";
+      let searchProviderName = "";
       try {
         companyBackground = await searchCompanyBackground(companyName, searchAltName);
         if (companyBackground) {
           console.log("[pre-interview] Got company background, length:", companyBackground.length);
+          // 获取搜索引擎名称
+          const wsSetting = await prisma.settings.findUnique({ where: { key: "websearch_config" } });
+          if (wsSetting?.value) {
+            const wsConfig = JSON.parse(wsSetting.value);
+            searchProviderName = wsConfig.provider || "";
+          }
         }
       } catch {}
 
@@ -563,6 +570,7 @@ export async function POST(req: NextRequest) {
         ...parsed,
         _source: {
           hasWebSearch: !!companyBackground,
+          searchProvider: searchProviderName || null,
           searchedAt: companyBackground ? new Date().toISOString() : null,
           webSearchSnippet: companyBackground ? companyBackground.substring(0, 500) : null,
         },
