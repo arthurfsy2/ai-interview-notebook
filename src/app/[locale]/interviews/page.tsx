@@ -104,6 +104,13 @@ export default function InterviewsPage() {
     }
   };
 
+  // Filtered list: only show interviews in the selected calendar month
+  const filteredInterviews = useMemo(() => {
+    const { year, month } = calendarDate;
+    const prefix = `${year}-${String(month + 1).padStart(2, "0")}`;
+    return interviews.filter((item) => item.interviewDate.startsWith(prefix));
+  }, [interviews, calendarDate]);
+
   // Calendar: map date string -> interview count
   const interviewDateMap = useMemo(() => {
     const map: Record<string, number> = {};
@@ -250,10 +257,12 @@ export default function InterviewsPage() {
         {/* Interview List */}
         {loading ? (
           <div className="text-center py-12 text-slate-400">{t("loading")}</div>
-        ) : interviews.length === 0 ? (
+        ) : filteredInterviews.length === 0 ? (
           <div className="text-center py-16">
             <BriefcaseBusiness className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-            <p className="text-slate-500 mb-4">{t("noRecords")}</p>
+            <p className="text-slate-500 mb-4">
+              {interviews.length === 0 ? t("noRecords") : `${calendarDate.year}年${calendarDate.month + 1}月暂无面试记录`}
+            </p>
             <Link href="/interviews/new">
               <Button className="bg-blue-600 hover:bg-blue-700">
                 <Plus className="h-4 w-4 mr-1" />
@@ -263,7 +272,7 @@ export default function InterviewsPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {interviews.map((item) => (
+            {filteredInterviews.map((item) => (
               <Card
                 key={item.id}
                 className="group hover:shadow-md hover:border-blue-200 transition-all duration-200 hover:-translate-y-0.5 cursor-pointer"
