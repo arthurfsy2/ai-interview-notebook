@@ -117,7 +117,7 @@ export function parseLiepinJD(raw: string): LiepinParsed {
   result.listingStatus = match1(raw, /融资阶段[：:]\s*([^\n]+)/);
 
   // 7. 工作地址
-  result.workAddress = match1(raw, /职位地址[：:]\s*([^\n]+)/);
+  result.workAddress = match1(raw, /职位地址[：:]\s*([^\n]+)/).replace(/公司地址.*$/, "").replace(/查看.*地图.*$/, "").trim();
 
   // 8. JD 正文：职位介绍部分
   const jdMatch = raw.match(/职位介绍\s*\n+([\s\S]*?)(?=其他信息|公司简介|猎聘温馨提示|猜你喜欢)/);
