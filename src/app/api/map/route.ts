@@ -41,13 +41,9 @@ export async function GET() {
       });
     }
 
-    // 2. 公司地址标记（只取有面试记录的）
+    // 2. 公司地址标记（从投前分析中取，去重）
     const analyses = await prisma.preInterviewAnalysis.findMany({
-      where: {
-        latitude: { not: null },
-        longitude: { not: null },
-        linkedInterviewId: { not: null },
-      },
+      where: { latitude: { not: null }, longitude: { not: null } },
       select: {
         id: true,
         companyName: true,
@@ -55,7 +51,6 @@ export async function GET() {
         latitude: true,
         longitude: true,
         analysisResult: true,
-        interview: { select: { result: true, interviewDate: true } },
       },
     });
 
@@ -71,6 +66,12 @@ export async function GET() {
         commuteInfo = result.commuteInfo;
       } catch {}
 
+      // 查找关联的面试记录获取结果
+      const linkedInterview = await prisma.preInterviewAnalysis.findUnique({
+        where: { id: a.id },
+        select: { interview: { select: { result: true, interviewDate: true } } },
+      });
+
       markers.push({
         id: a.id,
         type: "company",
@@ -81,8 +82,8 @@ export async function GET() {
         distance: commuteInfo?.distance,
         duration: commuteInfo?.duration,
         formattedDistance: commuteInfo?.formatted,
-        result: a.interview?.result,
-        interviewDate: a.interview?.interviewDate?.toISOString(),
+        result: linkedInterview?.interview?.result,
+        interviewDate: linkedInterview?.interview?.interviewDate?.toISOString(),
       });
     }
 
