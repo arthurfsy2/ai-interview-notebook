@@ -86,15 +86,16 @@ export function parseBossJD(raw: string): BossParsed {
   if (!isBossFormat(raw)) return result;
   result.detected = true;
 
-  // 1. 岗位名称 + 薪资：匹配 "职位名 薪资" 格式，跳过 BOSS 标签如"招聘中"
-  // 格式: "AI产品经理（周末双休+提供住宿） 25-35K" 或 "系统分析师 10-15K·13薪"
-  const titleMatch = raw.match(/(?:招聘中|最新)\s*\n\s*([^\n\d]+?)\s+(\d+[-~]\d+[Kk]·?\d*\s*薪?)/);
+  // 1. 岗位名称 + 薪资：匹配 "职位名 (工号) 薪资" 格式
+  // 格式: "AI产品经理（周末双休+提供住宿） 25-35K" 或 "中/高级数字化产品经理（研发） (MJ005398) 25-50K·15薪"
+  const titleMatch = raw.match(/(?:招聘中|最新)\s*\n\s*(.+?)\s+(\d+[-~]\d+[Kk]·?\d*\s*薪?)/);
   if (titleMatch) {
-    result.position = clean(titleMatch[1]);
+    // 去掉岗位名中的工号，如 (MJ005398)
+    result.position = clean(titleMatch[1].replace(/\s*\([A-Z]{2}\d+\)\s*/g, ""));
     result.salary = clean(titleMatch[2]);
   } else {
-    // Fallback: match first line with salary pattern after position name
-    const fallback = raw.match(/([一-龥a-zA-Z()（）+]+(?:周末双休[+])?(?:提供住宿)?)\s+(\d+[-~]\d+[Kk][·\d]*\s*薪?)/);
+    // Fallback: match position name with optional job ID before salary
+    const fallback = raw.match(/([一-龥a-zA-Z()（）+\/]+)\s*(?:\([A-Z]{2}\d+\)\s*)?(\d+[-~]\d+[Kk][·\d]*\s*薪?)/);
     if (fallback) {
       result.position = clean(fallback[1]);
       result.salary = clean(fallback[2]);
@@ -119,7 +120,7 @@ export function parseBossJD(raw: string): BossParsed {
       result.companyDisplayName = clean(nameMatch[1]);
       result.companyName = clean(nameMatch[1]);
     }
-    result.listingStatus = match1(infoText, /(已上市|未上市|已融资|不需要融资|A轮|B轮|C轮|D轮|天使轮)/);
+    result.listingStatus = match1(infoText, /(已上市|未上市|已融资|不需要融资|A轮|B轮|C轮|D轮及以上|D轮|天使轮)/);
     result.companySize = match1(infoText, /(\d+人以上|\d+-\d+人|少于\d+人)/);
     result.industry = match1(infoText, /([一-龥]+\/[一-龥]+)/);
   }
@@ -170,9 +171,9 @@ export function parseBossJD(raw: string): BossParsed {
   }
 
   // 8. 工作地址
-  const addrMatch = raw.match(/工作地址\s*\n+([^\n]+(?:\n[^\n]+)?)/);
+  const addrMatch = raw.match(/工作地址\s*\n+([^\n]+)/);
   if (addrMatch) {
-    result.workAddress = clean(addrMatch[1]);
+    result.workAddress = clean(addrMatch[1]).replace(/公司地址.*$/, "").replace(/查看.*地图.*$/, "").trim();
   }
 
   return result;
