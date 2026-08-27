@@ -202,10 +202,10 @@ export default function MapPage() {
                   </div>
                   {selectedMarker.type === "company" && selectedMarker.id !== "home" && (
                     <button
-                      onClick={() => router.push(`/pre-interview/${selectedMarker.id}`)}
+                      onClick={() => router.push(`/interviews/${selectedMarker.id}`)}
                       className="mt-2 text-xs text-blue-600 hover:underline"
                     >
-                      查看投前分析报告 →
+                      查看面试记录 →
                     </button>
                   )}
                 </CardContent>

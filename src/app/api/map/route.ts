@@ -19,6 +19,7 @@ interface MapMarker {
 /**
  * GET /api/map
  * 返回地图标记数据 + 高德 JS API Key
+ * 以面试记录为主，通过公司名匹配投前分析获取经纬度
  */
 export async function GET() {
   try {
@@ -41,11 +42,10 @@ export async function GET() {
       });
     }
 
-    // 2. 公司地址标记（从投前分析中取，去重）
-    const analyses = await prisma.preInterviewAnalysis.findMany({
+    // 2. 所有有经纬度的投前分析（建索引：公司名 → 坐标+距离）
+    const geocodedAnalyses = await prisma.preInterviewAnalysis.findMany({
       where: { latitude: { not: null }, longitude: { not: null } },
       select: {
-        id: true,
         companyName: true,
         workAddress: true,
         latitude: true,
@@ -53,41 +53,55 @@ export async function GET() {
         analysisResult: true,
       },
     });
+    const geoByCompany = new Map<string, typeof geocodedAnalyses[0]>();
+    for (const a of geocodedAnalyses) {
+      if (!geoByCompany.has(a.companyName)) {
+        geoByCompany.set(a.companyName, a);
+      }
+    }
+
+    // 3. 面试记录 → 匹配经纬度
+    const interviews = await prisma.interview.findMany({
+      select: {
+        id: true,
+        companyName: true,
+        result: true,
+        interviewDate: true,
+      },
+      orderBy: { interviewDate: "desc" },
+    });
 
     const seen = new Set<string>();
-    for (const a of analyses) {
-      const key = `${a.latitude},${a.longitude}`;
+    for (const iv of interviews) {
+      const geo = geoByCompany.get(iv.companyName);
+      if (!geo) continue; // 没有经纬度的跳过
+
+      const key = `${geo.latitude},${geo.longitude}`;
       if (seen.has(key)) continue;
       seen.add(key);
 
       let commuteInfo: any = null;
       try {
-        const result = JSON.parse(a.analysisResult || "{}");
+        const result = JSON.parse(geo.analysisResult || "{}");
         commuteInfo = result.commuteInfo;
       } catch {}
 
-      // 查找关联的面试记录获取结果
-      const linkedInterview = await prisma.preInterviewAnalysis.findUnique({
-        where: { id: a.id },
-        select: { interview: { select: { result: true, interviewDate: true } } },
-      });
-
       markers.push({
-        id: a.id,
+        id: iv.id,
         type: "company",
-        name: a.companyName,
-        address: a.workAddress || undefined,
-        lat: a.latitude,
-        lng: a.longitude,
+        name: iv.companyName,
+        address: geo.workAddress || undefined,
+        lat: geo.latitude,
+        lng: geo.longitude,
         distance: commuteInfo?.distance,
         duration: commuteInfo?.duration,
         formattedDistance: commuteInfo?.formatted,
-        result: linkedInterview?.interview?.result,
-        interviewDate: linkedInterview?.interview?.interviewDate?.toISOString(),
+        result: iv.result,
+        interviewDate: iv.interviewDate?.toISOString(),
       });
     }
 
-    // 3. 高德 JS API Key
+    // 4. 高德 JS API Key
     let jsApiKey = "";
     try {
       const configsSetting = await prisma.settings.findUnique({ where: { key: "ai_configs" } });

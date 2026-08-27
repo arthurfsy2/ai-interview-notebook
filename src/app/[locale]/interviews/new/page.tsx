@@ -80,12 +80,15 @@ export default function NewInterviewPage() {
   });
 
   // Pre-fill from query params (from pre-interview link)
+  const [preInterviewId, setPreInterviewId] = useState<string | null>(null);
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const company = params.get("company");
     const position = params.get("position");
     const salary = params.get("salary");
     const workSchedule = params.get("workSchedule");
+    const preId = params.get("preInterviewId");
+    if (preId) setPreInterviewId(preId);
     if (company || position || salary || workSchedule) {
       setForm((prev) => ({
         ...prev,
@@ -114,6 +117,14 @@ export default function NewInterviewPage() {
       });
       const data = await res.json();
       if (data.success) {
+        // 回写投前分析的 linkedInterviewId
+        if (preInterviewId && data.data.id) {
+          await fetch(`/api/pre-interview/${preInterviewId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ linkedInterviewId: data.data.id }),
+          });
+        }
         router.push(`/interviews/${data.data.id}`);
       }
     } catch (e) {

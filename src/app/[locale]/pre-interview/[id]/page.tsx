@@ -623,6 +623,7 @@ export default function PreInterviewDetailPage() {
               const params = new URLSearchParams();
               params.set("company", analysis.companyName);
               params.set("position", analysis.position);
+              params.set("preInterviewId", analysis.id);
               if (report?.jdAnalysis?.listedSalaryRange) params.set("salary", report.jdAnalysis.listedSalaryRange);
               if (report?.jdAnalysis?.workSchedule && report.jdAnalysis.workSchedule !== "未提及") params.set("workSchedule", report.jdAnalysis.workSchedule);
               router.push(`/interviews/new?${params.toString()}`);
