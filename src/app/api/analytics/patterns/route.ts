@@ -103,7 +103,7 @@ export async function GET(req: NextRequest) {
           { role: "user", content: prompt },
         ],
         temperature: 0.3,
-        max_tokens: 1500,
+        max_tokens: 4000,
       },
       { maxRetries: 0, timeout: 120000 }
     );
