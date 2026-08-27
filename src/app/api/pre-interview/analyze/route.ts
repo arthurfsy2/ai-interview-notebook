@@ -76,17 +76,17 @@ async function searchCompanyBackground(companyName: string, altName?: string): P
     };
 
     console.log("[pre-interview] WebSearch primary:", companyName);
-    const primary = await doSearch(`${companyName} 公司 融资 规模 评价`);
+    const primary = await doSearch(companyName);
 
     let secondary = "";
     if (altName && altName !== companyName) {
       console.log("[pre-interview] WebSearch secondary:", altName);
-      secondary = await doSearch(`${altName} 公司 招聘`);
+      secondary = await doSearch(altName);
     }
 
     let culture = "";
     try {
-      culture = await doSearch(`${companyName} 员工评价 脉脉 看准 加班 工作强度`);
+      culture = await doSearch(`${companyName} 员工评价 工作强度`);
     } catch {}
 
     const merged = [primary, secondary, culture].filter(Boolean).join("\n");
