@@ -19,7 +19,7 @@ import {
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 
-function useVoiceInput() {
+function useVoiceInput(locale: string) {
   const [listening, setListening] = useState(false);
 
   const startListening = useCallback((onResult: (text: string) => void) => {
@@ -52,7 +52,7 @@ function useVoiceInput() {
       recognition.stop();
       setListening(false);
     };
-  }, []);
+  }, [locale]);
 
   return { listening, startListening };
 }
@@ -62,7 +62,7 @@ export default function NewInterviewPage() {
   const locale = useLocale();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const { listening, startListening } = useVoiceInput();
+  const { listening, startListening } = useVoiceInput(locale);
 
   const [form, setForm] = useState({
     companyName: "",
