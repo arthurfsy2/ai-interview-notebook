@@ -67,7 +67,8 @@ async function searchCompanyBackground(companyName: string, altName?: string): P
       const res = await fetch(fetchUrl, { method: "POST", headers, body });
       if (!res.ok) return "";
       const data = await res.json();
-      const results = data.results;
+      // AnySearch 返回 { code, data: { results } }，其他返回 { results }
+      const results = data.data?.results || data.results;
       if (!results?.length) return "";
       return results
         .map((r: any) => `- ${r.title || ""}: ${r.content || r.snippet || ""}`)
