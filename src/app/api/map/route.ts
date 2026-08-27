@@ -14,6 +14,7 @@ interface MapMarker {
   formattedDistance?: string;
   result?: string;
   interviewDate?: string;
+  interviewMode?: string;
 }
 
 /**
@@ -67,6 +68,7 @@ export async function GET() {
         companyName: true,
         result: true,
         interviewDate: true,
+        interviewMode: true,
       },
       orderBy: { interviewDate: "desc" },
     });
@@ -98,6 +100,7 @@ export async function GET() {
         formattedDistance: commuteInfo?.formatted,
         result: iv.result,
         interviewDate: iv.interviewDate?.toISOString(),
+        interviewMode: iv.interviewMode,
       });
     }
 

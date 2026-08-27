@@ -21,6 +21,7 @@ interface MapMarker {
   formattedDistance?: string;
   result?: string;
   interviewDate?: string;
+  interviewMode?: string;
 }
 
 declare global {
@@ -95,9 +96,19 @@ export default function MapPage() {
 
     for (const m of markerData) {
       const isHome = m.type === "home";
-      const content = isHome
-        ? '<div style="background:#3b82f6;width:24px;height:24px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;"><span style="color:white;font-size:12px;">🏠</span></div>'
-        : '<div style="background:#ef4444;width:24px;height:24px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;"><span style="color:white;font-size:12px;">🏢</span></div>';
+      let bgColor = "#ef4444"; // 红色 = 线下（默认）
+      let emoji = "🏢";
+      if (isHome) {
+        bgColor = "#3b82f6"; // 蓝色 = 家
+        emoji = "🏠";
+      } else if (m.interviewMode === "线上") {
+        bgColor = "#f59e0b"; // 橙色 = 线上
+        emoji = "💻";
+      } else if (m.interviewMode === "混合") {
+        bgColor = "#8b5cf6"; // 紫色 = 混合
+        emoji = "🔄";
+      }
+      const content = `<div style="background:${bgColor};width:24px;height:24px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);display:flex;align-items:center;justify-content:center;"><span style="color:white;font-size:12px;">${emoji}</span></div>`;
 
       const marker = new window.AMap.Marker({
         position: [m.lng, m.lat],
@@ -136,9 +147,11 @@ export default function MapPage() {
             </button>
             <h1 className="text-xl font-bold text-slate-900">面试地图</h1>
           </div>
-          <div className="flex items-center gap-2 text-xs text-slate-400">
-            <span className="flex items-center gap-1"><Home className="h-3 w-3" /> 家</span>
-            <span className="flex items-center gap-1"><Building2 className="h-3 w-3" /> 公司</span>
+          <div className="flex items-center gap-3 text-xs text-slate-400">
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-blue-500 inline-block" /> 家</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-red-500 inline-block" /> 线下</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block" /> 线上</span>
+            <span className="flex items-center gap-1"><span className="w-2.5 h-2.5 rounded-full bg-purple-500 inline-block" /> 混合</span>
           </div>
         </div>
 
@@ -238,11 +251,22 @@ export default function MapPage() {
                       {m.formattedDistance && (
                         <p className="text-xs text-blue-600">🚗 {m.formattedDistance}</p>
                       )}
-                      {m.result && (
-                        <Badge className={`text-xs mt-1 ${resultColors[m.result] || ""}`}>
-                          {m.result}
-                        </Badge>
-                      )}
+                      <div className="flex items-center gap-1 mt-1 justify-end">
+                        {m.interviewMode && (
+                          <Badge className={`text-xs ${
+                            m.interviewMode === "线上" ? "bg-amber-100 text-amber-700" :
+                            m.interviewMode === "混合" ? "bg-purple-100 text-purple-700" :
+                            "bg-red-100 text-red-700"
+                          }`}>
+                            {m.interviewMode}
+                          </Badge>
+                        )}
+                        {m.result && (
+                          <Badge className={`text-xs ${resultColors[m.result] || ""}`}>
+                            {m.result}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
