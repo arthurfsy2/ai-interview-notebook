@@ -1,13 +1,15 @@
 /**
  * AI 配置管理工具
- * 
+ *
  * 从数据库动态读取 AI 配置，支持环境变量 fallback
+ * 带内存缓存，避免每次都查数据库
  */
 
 import { prisma } from '@/lib/prisma';
 import OpenAI from 'openai';
 import { normalizeAIUrl } from '@/lib/ai-url';
 import { decryptSafe } from '@/lib/crypto';
+import { getCache, setCache, deleteCache } from '@/lib/cache';
 
 export interface AIConfig {
   apiKey: string;
@@ -28,11 +30,19 @@ export interface AIConfigWithMeta extends AIConfig {
 export { normalizeAIUrl } from '@/lib/ai-url';
 
 /**
- * 从数据库获取 AI 配置
- * 
+ * 从数据库获取 AI 配置（带缓存）
+ *
  * @returns AI 配置对象
  */
 export async function getAIConfigFromDB(): Promise<AIConfig> {
+  const cacheKey = 'ai_config_active';
+
+  // 1. 尝试从缓存获取
+  const cached = getCache<AIConfig>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   const defaultConfig: AIConfig = {
     apiKey: process.env.DASHSCOPE_API_KEY || '',
     baseUrl: process.env.AI_BASE_URL || 'https://dashscope.aliyuncs.com/compatible-mode/v1',
@@ -40,19 +50,21 @@ export async function getAIConfigFromDB(): Promise<AIConfig> {
   };
 
   try {
-    // 读取多配置和激活配置
+    // 2. 读取多配置和激活配置
     const [configsSetting, activeSetting] = await Promise.all([
       prisma.settings.findUnique({ where: { key: 'ai_configs' } }),
       prisma.settings.findUnique({ where: { key: 'ai_active_config' } }),
     ]);
 
+    let config: AIConfig = defaultConfig;
+
     if (configsSetting?.value) {
       const configs = JSON.parse(configsSetting.value);
       const activeId = activeSetting?.value;
       const activeConfig = configs.find((c: any) => c.id === activeId) || configs[0];
-      
+
       if (activeConfig) {
-        return {
+        config = {
           apiKey: decryptSafe(activeConfig.apiKey) || defaultConfig.apiKey,
           baseUrl: activeConfig.baseUrl || defaultConfig.baseUrl,
           model: activeConfig.model || defaultConfig.model,
@@ -60,30 +72,45 @@ export async function getAIConfigFromDB(): Promise<AIConfig> {
           proxy: activeConfig.proxy || undefined,
         };
       }
+    } else {
+      // 兼容旧版：ai_config JSON
+      const aiConfigSetting = await prisma.settings.findUnique({
+        where: { key: 'ai_config' },
+      });
+
+      if (aiConfigSetting?.value) {
+        const parsed = JSON.parse(aiConfigSetting.value);
+        config = {
+          apiKey: decryptSafe(parsed.apiKey) || defaultConfig.apiKey,
+          baseUrl: parsed.baseUrl || defaultConfig.baseUrl,
+          model: parsed.model || defaultConfig.model,
+          provider: parsed.provider,
+          proxy: parsed.proxy || undefined,
+        };
+      }
     }
 
-    // 兼容旧版：ai_config JSON
-    const aiConfigSetting = await prisma.settings.findUnique({
-      where: { key: 'ai_config' },
-    });
+    // 3. 缓存结果（5分钟）
+    setCache(cacheKey, config, 5 * 60 * 1000);
 
-    if (aiConfigSetting?.value) {
-      const parsed = JSON.parse(aiConfigSetting.value);
-      return {
-        apiKey: decryptSafe(parsed.apiKey) || defaultConfig.apiKey,
-        baseUrl: parsed.baseUrl || defaultConfig.baseUrl,
-        model: parsed.model || defaultConfig.model,
-        provider: parsed.provider,
-        proxy: parsed.proxy || undefined,
-      };
-    }
-
-    return defaultConfig;
+    return config;
   } catch (error) {
     console.error('[getAIConfigFromDB] 读取数据库配置失败:', error);
     // 降级到环境变量
     return defaultConfig;
   }
+}
+
+/**
+ * 清除所有 AI 配置缓存
+ * 在更新 AI 配置后调用
+ */
+export function clearAIConfigCache(): void {
+  deleteCache('ai_config_active');
+  deleteCache('ai_config_ocr');
+  deleteCache('ai_config_text');
+  deleteCache('ai_tier_ocr');
+  deleteCache('ai_tier_text');
 }
 
 /**
@@ -110,12 +137,20 @@ export async function createOpenAIClient(): Promise<OpenAI> {
 }
 
 /**
- * 根据用途获取 AI 配置
+ * 根据用途获取 AI 配置（带缓存）
  *
  * @param purpose - 'ocr'（图片识别）或 'text'（文字分析）
  * @returns 匹配的 AI 配置，优先级：专用配置 > all 配置 > 激活配置
  */
 export async function getConfigForPurpose(purpose: 'ocr' | 'text'): Promise<AIConfig> {
+  const cacheKey = `ai_config_${purpose}`;
+
+  // 1. 尝试从缓存获取
+  const cached = getCache<AIConfig>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   const defaultConfig = await getAIConfigFromDB();
 
   try {
@@ -133,54 +168,67 @@ export async function getConfigForPurpose(purpose: 'ocr' | 'text'): Promise<AICo
     // 激活的配置视为已启用
     const isEnabled = (c: AIConfigWithMeta) => c.apiKey && (c.enabled !== false || c.id === activeId);
 
+    let config: AIConfig = defaultConfig;
+
     // 1. 优先选激活的配置（无论 useFor）
     const activeConfig = configs.find(c => aiOnly(c) && c.id === activeId && isEnabled(c));
     if (activeConfig) {
-      return {
+      config = {
         apiKey: decryptSafe(activeConfig.apiKey),
         baseUrl: activeConfig.baseUrl,
         model: activeConfig.model,
         provider: activeConfig.provider,
         proxy: activeConfig.proxy || undefined,
       };
+    } else {
+      // 2. 找启用的专用配置（useFor === purpose）
+      const dedicated = configs.find(c => aiOnly(c) && c.useFor === purpose && isEnabled(c));
+      if (dedicated) {
+        config = {
+          apiKey: decryptSafe(dedicated.apiKey),
+          baseUrl: dedicated.baseUrl,
+          model: dedicated.model,
+          provider: dedicated.provider,
+          proxy: dedicated.proxy || undefined,
+        };
+      } else {
+        // 3. 找启用的通用配置（useFor === 'all' 或未设置）
+        const general = configs.find(c => aiOnly(c) && (c.useFor === 'all' || !c.useFor) && isEnabled(c));
+        if (general) {
+          config = {
+            apiKey: decryptSafe(general.apiKey),
+            baseUrl: general.baseUrl,
+            model: general.model,
+            provider: general.provider,
+            proxy: general.proxy || undefined,
+          };
+        }
+        // 4. fallback 到激活配置（已在 defaultConfig 中）
+      }
     }
 
-    // 2. 找启用的专用配置（useFor === purpose）
-    const dedicated = configs.find(c => aiOnly(c) && c.useFor === purpose && isEnabled(c));
-    if (dedicated) {
-      return {
-        apiKey: decryptSafe(dedicated.apiKey),
-        baseUrl: dedicated.baseUrl,
-        model: dedicated.model,
-        provider: dedicated.provider,
-        proxy: dedicated.proxy || undefined,
-      };
-    }
+    // 5. 缓存结果（5分钟）
+    setCache(cacheKey, config, 5 * 60 * 1000);
 
-    // 3. 找启用的通用配置（useFor === 'all' 或未设置）
-    const general = configs.find(c => aiOnly(c) && (c.useFor === 'all' || !c.useFor) && isEnabled(c));
-    if (general) {
-      return {
-        apiKey: decryptSafe(general.apiKey),
-        baseUrl: general.baseUrl,
-        model: general.model,
-        provider: general.provider,
-        proxy: general.proxy || undefined,
-      };
-    }
-
-    // 3. fallback 到激活配置
-    return defaultConfig;
+    return config;
   } catch {
     return defaultConfig;
   }
 }
 
 /**
- * 检查指定用途的配置是否为免费 tier
+ * 检查指定用途的配置是否为免费 tier（带缓存）
  * 用于批量上传时决定并发和限流策略
  */
 export async function isFreeTier(purpose: 'ocr' | 'text'): Promise<boolean> {
+  const cacheKey = `ai_tier_${purpose}`;
+
+  // 1. 尝试从缓存获取
+  const cached = getCache<boolean>(cacheKey);
+  if (cached !== null) {
+    return cached;
+  }
+
   try {
     const [configsSetting, activeSetting] = await Promise.all([
       prisma.settings.findUnique({ where: { key: 'ai_configs' } }),
@@ -194,15 +242,24 @@ export async function isFreeTier(purpose: 'ocr' | 'text'): Promise<boolean> {
     const aiOnly = (c: AIConfigWithMeta) => c.provider !== 'websearch' && c.provider !== 'amap';
     const isEnabled = (c: AIConfigWithMeta) => c.apiKey && (c.enabled !== false || c.id === activeId);
 
+    let isFree = true;
+
     // 找启用的专用配置
     const dedicated = configs.find(c => aiOnly(c) && c.useFor === purpose && isEnabled(c));
-    if (dedicated) return dedicated.tier !== 'paid';
+    if (dedicated) {
+      isFree = dedicated.tier !== 'paid';
+    } else {
+      // 找启用的通用配置
+      const general = configs.find(c => aiOnly(c) && (c.useFor === 'all' || !c.useFor) && isEnabled(c));
+      if (general) {
+        isFree = general.tier !== 'paid';
+      }
+    }
 
-    // 找启用的通用配置
-    const general = configs.find(c => aiOnly(c) && (c.useFor === 'all' || !c.useFor) && isEnabled(c));
-    if (general) return general.tier !== 'paid';
+    // 2. 缓存结果（5分钟）
+    setCache(cacheKey, isFree, 5 * 60 * 1000);
 
-    return true;
+    return isFree;
   } catch {
     return true;
   }

@@ -9,37 +9,65 @@ export const maxDuration = 180; // 3 minutes for multiple AI calls
 
 async function searchCompanyBackground(companyName: string, altName?: string): Promise<string> {
   try {
-    const configsSetting = await prisma.settings.findUnique({ where: { key: "ai_configs" } });
-    if (!configsSetting?.value) return "";
+    // 优先从新的 websearch_config 读取
+    let provider = "";
+    let apiKey = "";
 
-    const configs = JSON.parse(configsSetting.value);
-    const wsConfig = configs.find((c: any) => c.id === "websearch");
-    if (!wsConfig?.apiKey) return "";
-
-    const apiKey = decryptSafe(wsConfig.apiKey);
-    if (!apiKey) return "";
-
-    const isTavily = apiKey.startsWith("tvly-");
-
-    const fetchUrl = isTavily
-      ? "https://api.tavily.com/search"
-      : "https://api.exa.ai/search";
-
-    const headers: Record<string, string> = { "Content-Type": "application/json" };
-    if (isTavily) {
-      headers["Authorization"] = `Bearer ${apiKey}`;
-    } else {
-      headers["x-api-key"] = apiKey;
+    const wsSetting = await prisma.settings.findUnique({ where: { key: "websearch_config" } });
+    if (wsSetting?.value) {
+      const wsConfig = JSON.parse(wsSetting.value);
+      provider = wsConfig.provider || "";
+      apiKey = wsConfig.apiKey ? decryptSafe(wsConfig.apiKey) : "";
     }
 
+    // 兼容旧数据：从 ai_configs 中读取
+    if (!apiKey) {
+      const configsSetting = await prisma.settings.findUnique({ where: { key: "ai_configs" } });
+      if (configsSetting?.value) {
+        const configs = JSON.parse(configsSetting.value);
+        const wsConfig = configs.find((c: any) => c.id === "websearch");
+        if (wsConfig?.apiKey) {
+          apiKey = decryptSafe(wsConfig.apiKey);
+          if (!provider) {
+            if (apiKey.startsWith("tvly-")) provider = "tavily";
+            else if (apiKey.startsWith("exa-")) provider = "exa";
+            else provider = "tavily";
+          }
+        }
+      }
+    }
+
+    if (!apiKey || !provider) return "";
+
     const doSearch = async (query: string) => {
-      const body = isTavily
-        ? JSON.stringify({ query, max_results: 3 })
-        : JSON.stringify({ query, num_results: 3 });
+      let fetchUrl: string;
+      let headers: Record<string, string> = { "Content-Type": "application/json" };
+      let body: string;
+
+      switch (provider) {
+        case "tavily":
+          fetchUrl = "https://api.tavily.com/search";
+          headers["Authorization"] = `Bearer ${apiKey}`;
+          body = JSON.stringify({ query, max_results: 3 });
+          break;
+        case "exa":
+          fetchUrl = "https://api.exa.ai/search";
+          headers["x-api-key"] = apiKey;
+          body = JSON.stringify({ query, num_results: 3 });
+          break;
+        case "anysearch":
+          fetchUrl = "https://api.anysearch.com/v1/search";
+          headers["Authorization"] = `Bearer ${apiKey}`;
+          body = JSON.stringify({ query, max_results: 3 });
+          break;
+        default:
+          return "";
+      }
+
       const res = await fetch(fetchUrl, { method: "POST", headers, body });
       if (!res.ok) return "";
       const data = await res.json();
-      const results = isTavily ? data.results : data.results;
+      const results = data.results;
       if (!results?.length) return "";
       return results
         .map((r: any) => `- ${r.title || ""}: ${r.content || r.snippet || ""}`)

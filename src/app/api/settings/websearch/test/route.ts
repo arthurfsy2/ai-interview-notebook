@@ -2,80 +2,90 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { decryptSafe } from "@/lib/crypto";
 
+interface TestRequest {
+  apiKey?: string;
+  provider?: string;
+}
+
+function getProviderConfig(provider: string, apiKey: string) {
+  switch (provider) {
+    case "tavily":
+      return {
+        url: "https://api.tavily.com/search",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+        body: { query: "test", max_results: 1 },
+        name: "Tavily",
+      };
+    case "exa":
+      return {
+        url: "https://api.exa.ai/search",
+        headers: { "Content-Type": "application/json", "x-api-key": apiKey },
+        body: { query: "test", num_results: 1 },
+        name: "Exa",
+      };
+    case "anysearch":
+      return {
+        url: "https://api.anysearch.com/v1/search",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}` },
+        body: { query: "test", max_results: 1 },
+        name: "AnySearch",
+      };
+    default:
+      return null;
+  }
+}
+
 /**
  * POST /api/settings/websearch/test
- * 测试 WebSearch API 连接（Tavily / Exa）
+ * 测试 WebSearch API 连接
  */
 export async function POST(request: Request) {
   try {
-    const { apiKey: rawApiKey } = await request.json();
+    const { apiKey: rawApiKey, provider: reqProvider } = await request.json();
 
     let apiKey = rawApiKey;
+    let provider = reqProvider;
 
-    // 前端未传 apiKey 时，从数据库读取已保存的 key
+    // 前端未传时，从数据库读取
+    if (!apiKey || !provider) {
+      const configsSetting = await prisma.settings.findUnique({ where: { key: "websearch_config" } });
+      if (configsSetting?.value) {
+        const stored = JSON.parse(configsSetting.value);
+        if (!apiKey && stored.apiKey) apiKey = decryptSafe(stored.apiKey);
+        if (!provider && stored.provider) provider = stored.provider;
+      }
+    }
+
+    // 兼容旧数据：从 ai_configs 中读取
     if (!apiKey) {
-      const configsSetting = await prisma.settings.findUnique({
-        where: { key: "ai_configs" },
-      });
+      const configsSetting = await prisma.settings.findUnique({ where: { key: "ai_configs" } });
       if (configsSetting?.value) {
         const configs = JSON.parse(configsSetting.value);
         const stored = configs.find((c: any) => c.id === "websearch");
         if (stored?.apiKey) {
           apiKey = decryptSafe(stored.apiKey);
+          // 旧数据没有 provider 字段，根据 key 前缀推断
+          if (!provider) {
+            if (apiKey.startsWith("tvly-")) provider = "tavily";
+            else if (apiKey.startsWith("exa-")) provider = "exa";
+            else provider = "tavily"; // 默认
+          }
         }
       }
     }
 
-    if (!apiKey) {
-      return NextResponse.json({
-        success: false,
-        error: "API Key 不能为空",
-      });
+    if (!apiKey || !provider) {
+      return NextResponse.json({ success: false, error: "API Key 和搜索引擎不能为空" });
     }
 
-    // 判断是 Tavily 还是 Exa
-    const isTavily = apiKey.startsWith("tvly-");
-    const isExa = apiKey.startsWith("exa-");
-
-    let fetchUrl: string;
-    let fetchOptions: RequestInit;
-
-    if (isTavily) {
-      fetchUrl = "https://api.tavily.com/search";
-      fetchOptions = {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({ query: "test", max_results: 1 }),
-      };
-    } else if (isExa) {
-      fetchUrl = "https://api.exa.ai/search";
-      fetchOptions = {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-api-key": apiKey,
-        },
-        body: JSON.stringify({ query: "test", num_results: 1 }),
-      };
-    } else {
-      // 不确定类型时，优先尝试 Tavily
-      fetchUrl = "https://api.tavily.com/search";
-      fetchOptions = {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({ query: "test", max_results: 1 }),
-      };
+    const config = getProviderConfig(provider, apiKey);
+    if (!config) {
+      return NextResponse.json({ success: false, error: `不支持的搜索引擎: ${provider}` });
     }
 
     const debug = {
-      requestUrl: fetchUrl,
-      provider: isTavily ? "Tavily" : isExa ? "Exa" : "Tavily (推测)",
+      requestUrl: config.url,
+      provider: config.name,
       apiKeyMasked: apiKey ? `${apiKey.substring(0, 8)}...${apiKey.slice(-4)}` : "(empty)",
     };
     const startTime = Date.now();
@@ -84,7 +94,11 @@ export async function POST(request: Request) {
 
     let fetchResponse: Response;
     try {
-      fetchResponse = await fetch(fetchUrl, fetchOptions);
+      fetchResponse = await fetch(config.url, {
+        method: "POST",
+        headers: config.headers,
+        body: JSON.stringify(config.body),
+      });
     } catch (fetchErr: any) {
       return NextResponse.json({
         success: false,
@@ -111,9 +125,6 @@ export async function POST(request: Request) {
     });
   } catch (error: any) {
     console.error("[WebSearch Test] error:", error.message);
-    return NextResponse.json({
-      success: false,
-      error: error.message || "连接失败",
-    });
+    return NextResponse.json({ success: false, error: error.message || "连接失败" });
   }
 }

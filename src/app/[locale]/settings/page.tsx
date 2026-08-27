@@ -67,6 +67,7 @@ export default function SettingsPage() {
   const [isTesting, setIsTesting] = useState(false);
   const [testResult, setTestResult] = useState<{ success: boolean; message?: string; error?: string; debug?: { requestUrl: string; normalizedBaseUrl: string; requestModel: string; method: string; apiKeyMasked: string } } | null>(null);
   const [editingId, setEditingId] = useState<string>(""); // 当前编辑中的 config id，空 = 新建
+  const [webSearchProvider, setWebSearchProvider] = useState("tavily");
   const [webSearchKey, setWebSearchKey] = useState("");
   const [webSearchSaving, setWebSearchSaving] = useState(false);
   const [webSearchSaved, setWebSearchSaved] = useState(false);
@@ -104,13 +105,20 @@ export default function SettingsPage() {
 
   useEffect(() => {
     fetchConfigs();
-    // Load existing WebSearch key
+    // Load WebSearch config from独立存储
+    fetch("/api/settings/websearch")
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.success && d.data) {
+          setWebSearchProvider(d.data.provider || "tavily");
+          if (d.data.hasApiKey) setWebSearchHasKey(true);
+        }
+      });
+    // Load Amap config
     fetch("/api/settings/ai")
       .then((r) => r.json())
       .then((d) => {
         if (d.success) {
-          const wsConfig = (d.configs || []).find((c: any) => c.id === "websearch");
-          if (wsConfig?.hasApiKey) setWebSearchHasKey(true);
           const amapConfig = (d.configs || []).find((c: any) => c.id === "amap");
           if (amapConfig?.hasApiKey) setAmapHasKey(true);
         }
@@ -251,18 +259,12 @@ export default function SettingsPage() {
     if (!webSearchKey.trim()) return;
     setWebSearchSaving(true);
     try {
-      await fetch("/api/settings/ai", {
+      await fetch("/api/settings/websearch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: "websearch",
-          provider: "websearch",
-          name: "WebSearch",
+          provider: webSearchProvider,
           apiKey: webSearchKey,
-          baseUrl: "",
-          model: "",
-          useFor: "text",
-          enabled: true,
         }),
       });
       setWebSearchKey("");
@@ -281,6 +283,7 @@ export default function SettingsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          provider: webSearchProvider,
           apiKey: webSearchKey || undefined,
         }),
       });
@@ -403,7 +406,7 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
-                {configs.map((c) => (
+                {configs.filter((c) => c.provider !== "websearch" && c.provider !== "amap").map((c) => (
                   <div
                     key={c.id}
                     onClick={() => handleEditConfig(c)}
@@ -631,20 +634,29 @@ export default function SettingsPage() {
           <CardHeader>
             <CardTitle className="text-lg flex items-center gap-2">
               <Globe className="h-5 w-5 text-emerald-600" />
-              WebSearch
+              搜索引擎
+              <span className="text-xs font-normal text-slate-400 bg-slate-100 px-2 py-0.5 rounded">用于公司背景实时搜索</span>
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <div>
-                <Label>{t("webSearchApiKey")}</Label>
+                <Label>搜索引擎</Label>
+                <Select value={webSearchProvider} onValueChange={(v) => setWebSearchProvider(v)}>
+                  <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="tavily">Tavily</SelectItem>
+                    <SelectItem value="exa">Exa</SelectItem>
+                    <SelectItem value="anysearch">AnySearch</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label>API Key</Label>
                 <p className="text-xs text-slate-400 mb-2">
-                  {t("webSearchApiKeyDesc")}
-                  <span className="ml-1">
-                    <a href="https://tavily.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Tavily</a>
-                    <span className="mx-1">·</span>
-                    <a href="https://exa.ai" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">Exa</a>
-                  </span>
+                  {webSearchProvider === "tavily" && <span>前往 <a href="https://tavily.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">tavily.com</a> 获取 Key</span>}
+                  {webSearchProvider === "exa" && <span>前往 <a href="https://exa.ai" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">exa.ai</a> 获取 Key</span>}
+                  {webSearchProvider === "anysearch" && <span>前往 <a href="https://anysearch.com" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">anysearch.com</a> 获取 Key</span>}
                 </p>
                 {webSearchHasKey && !webSearchKey && (
                   <p className="text-xs text-emerald-600 font-medium mb-1">✅ 已配置 API Key</p>
@@ -652,7 +664,7 @@ export default function SettingsPage() {
                 <div className="flex gap-2">
                   <Input
                     type="password"
-                    placeholder={webSearchHasKey ? "留空保留原 Key，或输入新 Key" : "tvly-... 或 exa-..."}
+                    placeholder={webSearchHasKey ? "留空保留原 Key，或输入新 Key" : "输入 API Key"}
                     value={webSearchKey}
                     onChange={(e) => setWebSearchKey(e.target.value)}
                     className="flex-1"
@@ -688,7 +700,7 @@ export default function SettingsPage() {
 
                 {/* WebSearch test result */}
                 {webSearchTestResult && (
-                  <div className={`text-xs p-2.5 rounded-lg ${
+                  <div className={`text-xs p-2.5 rounded-lg mt-2 ${
                     webSearchTestResult.success
                       ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
                       : "bg-red-50 text-red-700 border border-red-200"
@@ -700,8 +712,7 @@ export default function SettingsPage() {
                     </div>
                     {webSearchTestResult.debug && (
                       <div className="text-slate-500 mt-1 space-y-0.5">
-                        <div>🔗 {webSearchTestResult.debug.requestUrl}</div>
-                        <div>🏷 {webSearchTestResult.debug.provider}</div>
+                        <div>🔗 {webSearchTestResult.debug.provider}</div>
                       </div>
                     )}
                   </div>
